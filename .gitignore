@@ -1,0 +1,19 @@
+# Secrets
+.env
+*.env.local
+
+# Node
+node_modules/
+
+# Pulumi
+infra/.pulumi/
+
+# OpenClaw runtime (server-only)
+sessions/
+
+# Logs
+*.log
+bootstrap.log
+
+# macOS
+.DS_Store
