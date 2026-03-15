@@ -80,18 +80,26 @@ Once connected, replace `<serverIp>` everywhere with the Tailscale IP (stable ev
 
 ## Syncing workspace files
 
-The `workspace/` directory in this repo is the single source of truth for everything under `/root/.openclaw/workspace/` on the server. Secrets (`.env`) and runtime data (`sessions/`) live on the server only and are never synced back.
+Both `workspace/` (yours) and `workspace-honey/` (honey's) are the source of truth for their respective agent workspaces. Sync them independently.
 
 ### One-way push (Mac → Server)
 
 ```bash
 SERVER=root@<serverIp>
 
+# Your workspace
 rsync -av --delete \
   --exclude '.env' \
   --exclude 'sessions/' \
   workspace/ \
   $SERVER:/root/.openclaw/workspace/
+
+# Honey's workspace
+rsync -av --delete \
+  --exclude '.env' \
+  --exclude 'sessions/' \
+  workspace-honey/ \
+  $SERVER:/root/.openclaw/workspace-honey/
 ```
 
 Add `-n` (dry-run) first if you want to preview changes.
@@ -101,10 +109,10 @@ Add `-n` (dry-run) first if you want to preview changes.
 | Path | Why |
 |------|-----|
 | `/root/.openclaw/.env` | Contains secrets — never commit or sync back |
-| `/root/.openclaw/sessions/` | Runtime session state |
-| `/root/.openclaw/openclaw.json` | Deployed config; update manually via `scp` |
+| `/root/.openclaw/agents/*/sessions/` | Runtime session state |
+| `/root/.openclaw/credentials/` | WhatsApp QR session, pairing allowlists |
 
-### Convenience alias
+### Convenience aliases
 
 Add to `~/.zshrc`:
 
@@ -113,6 +121,11 @@ alias openclaw-sync='rsync -av --delete \
   --exclude ".env" --exclude "sessions/" \
   ~/Projects/GitHub/my-open-claw/workspace/ \
   root@<serverIp>:/root/.openclaw/workspace/'
+
+alias openclaw-sync-honey='rsync -av --delete \
+  --exclude ".env" --exclude "sessions/" \
+  ~/Projects/GitHub/my-open-claw/workspace-honey/ \
+  root@<serverIp>:/root/.openclaw/workspace-honey/'
 ```
 
 ---

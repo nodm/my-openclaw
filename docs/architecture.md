@@ -168,6 +168,7 @@ All secrets live exclusively in `/root/.openclaw/.env` on the server. Never comm
 | `AI_GATEWAY_API_KEY` | Vercel AI Gateway key (`vai-…`) |
 | `TELEGRAM_BOT_TOKEN` | From @BotFather |
 | `OPENCLAW_GATEWAY_TOKEN` | Random 32-byte hex, auth for Control UI |
+| `GOG_KEYRING_PASSWORD` | Random 32-byte hex, encrypts credential store (WhatsApp session etc.) |
 | `YOUR_TG_ID` / `HONEY_TG_ID` | Telegram user IDs (find via @userinfobot) |
 | `YOUR_WHATSAPP_NUMBER` / `HONEY_WHATSAPP_NUMBER` | E.164 phone numbers |
 | `MODEL_*` | Model slugs (not secret, but env-injected for easy swapping) |

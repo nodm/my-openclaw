@@ -1,0 +1,32 @@
+#cloud-config
+# Bootstrap script for OpenClaw on Hetzner CX22 (Ubuntu 24.04)
+# Installs Docker + UFW, pulls image, prepares mount point.
+# NOTE: Hetzner volume must be mounted manually after pulumi up — see deployment.md Step 3.
+
+package_update: true
+packages:
+  - ca-certificates
+  - curl
+  - ufw
+
+runcmd:
+  # Install Docker
+  - curl -fsSL https://get.docker.com | sh
+
+  # Firewall — SSH only inbound
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow 22/tcp comment 'SSH'
+  - ufw --force enable
+
+  # Create mount point for Hetzner volume
+  - mkdir -p /root/.openclaw
+
+  # Pull OpenClaw image so first `docker compose up` is fast
+  - docker pull ghcr.io/openclaw/openclaw:latest
+
+  # Bootstrap log
+  - echo "Bootstrapped at $(date --utc)" > /root/bootstrap.log
+  - echo "Docker $(docker --version)" >> /root/bootstrap.log
+  - echo "UFW enabled — SSH (22) only" >> /root/bootstrap.log
+  - echo "NEXT: mount Hetzner volume to /root/.openclaw (see deployment.md Step 3)" >> /root/bootstrap.log

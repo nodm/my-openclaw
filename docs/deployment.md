@@ -19,21 +19,26 @@ infra/
   package.json
   tsconfig.json
   index.ts             # SshKey + Firewall + Volume + Server + VolumeAttachment
-  cloud-init.yaml      # Docker, UFW, volume mount, dir structure, git clone
+  cloud-init.yaml      # Docker, UFW, image pull, mount point
 
 server/
   docker-compose.yml   # Template — copy to server at /root/docker-compose.yml
   .env.example         # Template — copy to server at /root/.openclaw/.env (fill secrets)
 
-workspace/
+workspace/             # Agent: main (you)
   USER.md              # Personal context for Clawd
   AGENTS.md            # Agent roster
   MEMORY.md            # Persistent memory (agent-written)
   HEARTBEAT.md         # Daily cron prompt
   skills/routing/
-    SKILL.md           # Autonomous routing logic
+    SKILL.md           # Autonomous model-routing logic
 
-openclaw.json          # Gateway config (Telegram, agents, model tiers)
+workspace-honey/       # Agent: honey (isolated)
+  USER.md
+  AGENTS.md
+  MEMORY.md
+
+openclaw.json          # Gateway config — agents, channels, bindings, model tiers
 ```
 
 ---
@@ -61,14 +66,24 @@ serverIp          = <IPv4>
 volumeLinuxDevice = /dev/disk/by-id/scsi-0HC_Volume_<id>
 ```
 
-## Step 3 — Verify server
+## Step 3 — Verify server and mount volume
 
 ```bash
 ssh root@<serverIp>
 docker info                   # should succeed
 cat /root/bootstrap.log       # check for errors
+
+# Mount Hetzner volume (one-time — use volumeLinuxDevice from pulumi output)
+VOLUME_DEV=<volumeLinuxDevice>   # e.g. /dev/disk/by-id/scsi-0HC_Volume_12345678
+mount "$VOLUME_DEV" /root/.openclaw
+echo "$VOLUME_DEV /root/.openclaw ext4 defaults,nofail 0 2" >> /etc/fstab
+
+# Create directory structure and fix ownership for container user (uid 1000)
+mkdir -p /root/.openclaw/workspace /root/.openclaw/workspace-honey
+chown -R 1000:1000 /root/.openclaw
+
+# Verify
 df -h /root/.openclaw         # should show 10G volume mounted
-ls /root/.openclaw/workspace/
 ```
 
 ## Step 4 — Vercel AI Gateway
@@ -81,9 +96,9 @@ ls /root/.openclaw/workspace/
    - `google/gemini-2.5-flash-lite`
    - `anthropic/claude-sonnet-4.6`
 
-## Step 5 — Update openclaw.json locally
+## Step 5 — Review openclaw.json
 
-Add model fields and the cron agent. See the **openclaw.json reference** section below for the full config to apply.
+The `openclaw.json` in the repo root is ready to use. Open it and replace the placeholder comments if needed — all sensitive values are injected from `.env` via `${VAR}` substitution.
 
 Sync it to the server (covered in Step 7).
 
@@ -113,6 +128,7 @@ cp /dev/stdin /root/.openclaw/.env << 'EOF'
 AI_GATEWAY_API_KEY=vai-REPLACE_ME
 TELEGRAM_BOT_TOKEN=REPLACE_ME
 OPENCLAW_GATEWAY_TOKEN=$(openssl rand -hex 32)
+GOG_KEYRING_PASSWORD=$(openssl rand -hex 32)
 YOUR_TG_ID=REPLACE_ME
 HONEY_TG_ID=REPLACE_ME
 YOUR_WHATSAPP_NUMBER=REPLACE_ME
@@ -136,9 +152,9 @@ scp server/docker-compose.yml root@<serverIp>:/root/docker-compose.yml
 ```bash
 ssh root@<serverIp>
 cd /root
-docker compose build --no-cache   # ~3-5 min first build
+docker compose pull               # pull latest image (~1 min)
 docker compose up -d
-docker compose logs -f             # watch for "Gateway listening on :18789"
+docker compose logs -f            # watch for "Gateway listening on :18789"
 ```
 
 ## Step 9 — Configure routing skill
@@ -170,59 +186,6 @@ Or just message your Telegram bot — it should respond via Vercel AI Gateway.
 
 ---
 
-## openclaw.json reference
-
-Replace the existing `openclaw.json` with this content (update the model-tier slugs if you change tiers):
-
-```json5
-// ~/.openclaw/openclaw.json
-{
-  gateway: {
-    mode: "local",
-    controlUi: {
-      allowedOrigins: ["http://localhost:18789", "http://127.0.0.1:18789"],
-    },
-  },
-
-  agents: {
-    defaults: {
-      workspace: "~/.openclaw/workspace",
-    },
-    list: [
-      {
-        id: "main",
-        model: "${MODEL_INTERACTIVE}",
-        identity: {
-          name: "Clawd",
-          theme: "helpful personal assistant",
-          emoji: "🦞",
-        },
-      },
-      {
-        id: "cron",
-        model: "${MODEL_SIMPLE}",
-        identity: {
-          name: "CronClawd",
-          theme: "background task executor",
-          emoji: "⏰",
-        },
-      },
-    ],
-  },
-
-  channels: {
-    telegram: {
-      enabled: true,
-      botToken: "${TELEGRAM_BOT_TOKEN}",
-      allowFrom: ["395789179"],
-      dmPolicy: "pairing",
-    },
-  },
-}
-```
-
----
-
 ## Ongoing operations
 
 ### Restart after config change
@@ -236,8 +199,8 @@ cd /root && docker compose restart
 
 ```bash
 ssh root@<serverIp>
-cd /opt/openclaw && git pull
-cd /root && docker compose build --no-cache && docker compose up -d
+docker compose pull
+docker compose up -d
 ```
 
 ### Swap a model tier

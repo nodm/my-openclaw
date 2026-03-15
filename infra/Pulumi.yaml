@@ -1,0 +1,3 @@
+name: openclaw-infra
+runtime: nodejs
+description: OpenClaw on Hetzner CX22 — SSH key, firewall, volume, server

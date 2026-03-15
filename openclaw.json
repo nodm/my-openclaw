@@ -1,0 +1,81 @@
+// ~/.openclaw/openclaw.json
+// Copy to server: scp openclaw.json root@<serverIp>:/root/.openclaw/openclaw.json
+// Then restart:   ssh root@<serverIp> "cd /root && docker compose restart"
+{
+  gateway: {
+    mode: "local",
+    controlUi: {
+      allowedOrigins: ["http://localhost:18789", "http://127.0.0.1:18789"],
+    },
+    reload: { mode: "hybrid" },
+  },
+
+  agents: {
+    defaults: {
+      workspace: "~/.openclaw/workspace",
+    },
+    list: [
+      {
+        id: "main",
+        model: "${MODEL_INTERACTIVE}",
+        workspace: "~/.openclaw/workspace",
+        identity: {
+          name: "Clawd",
+          theme: "helpful personal assistant",
+          emoji: "🦞",
+        },
+      },
+      {
+        id: "honey",
+        model: "${MODEL_INTERACTIVE}",
+        workspace: "~/.openclaw/workspace-honey",
+        identity: {
+          name: "Clawd",
+          theme: "helpful personal assistant",
+          emoji: "🦞",
+        },
+      },
+      {
+        id: "cron",
+        model: "${MODEL_SIMPLE}",
+        workspace: "~/.openclaw/workspace",
+        identity: {
+          name: "CronClawd",
+          theme: "background task executor",
+          emoji: "⏰",
+        },
+      },
+    ],
+  },
+
+  bindings: [
+    {
+      match: { channel: "telegram", peer: { kind: "user", id: "${YOUR_TG_ID}" } },
+      agentId: "main",
+    },
+    {
+      match: { channel: "telegram", peer: { kind: "user", id: "${HONEY_TG_ID}" } },
+      agentId: "honey",
+    },
+    {
+      match: { channel: "whatsapp", peer: { kind: "user", id: "${YOUR_WHATSAPP_NUMBER}" } },
+      agentId: "main",
+    },
+    {
+      match: { channel: "whatsapp", peer: { kind: "user", id: "${HONEY_WHATSAPP_NUMBER}" } },
+      agentId: "honey",
+    },
+  ],
+
+  channels: {
+    telegram: {
+      dmPolicy: "pairing",
+      allowFrom: ["${YOUR_TG_ID}", "${HONEY_TG_ID}"],
+      botToken: "${TELEGRAM_BOT_TOKEN}",
+    },
+    whatsapp: {
+      dmPolicy: "pairing",
+      allowFrom: ["${YOUR_WHATSAPP_NUMBER}", "${HONEY_WHATSAPP_NUMBER}"],
+    },
+  },
+}
