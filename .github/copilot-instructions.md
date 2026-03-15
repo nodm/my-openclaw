@@ -56,7 +56,7 @@ Inbound messages arrive via **Vercel AI Gateway** (outbound-initiated webhook fr
 | Var | Model | Use case |
 |-----|-------|----------|
 | `MODEL_INTERACTIVE` | Gemini 2.5 Flash | All user chat ($0.15/1M tok) |
-| `MODEL_MEDIUM` | Gemini 2.5 Flash | Research, code, multi-step ($0.15/1M tok) |
+| `MODEL_MEDIUM` | Claude Sonnet 4.6 | Research, code, multi-step ($3/1M tok) |
 | `MODEL_REASONING` | Gemini 2.5 Pro | Math, architecture, deep debug ($1.25/1M tok) |
 | `MODEL_SIMPLE` | Gemini 2.5 Flash Lite | Cron heartbeat ($0.015/1M tok) |
 

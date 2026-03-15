@@ -7,7 +7,7 @@ OpenClaw on Hetzner CPX22 (hel1) with Vercel AI Gateway and tiered model routing
 | Env var | Slug | Use case | ~Cost |
 |---------|------|----------|-------|
 | `MODEL_INTERACTIVE` | `vercel-ai-gateway/google/gemini-2.5-flash` | Main agent — all user chat | $0.15/1M tok |
-| `MODEL_MEDIUM` | `vercel-ai-gateway/google/gemini-2.5-flash` | Research, code, multi-step | $0.15/1M tok |
+| `MODEL_MEDIUM` | `vercel-ai-gateway/anthropic/claude-sonnet-4-6` | Research, code, multi-step | $3/1M tok |
 | `MODEL_REASONING` | `vercel-ai-gateway/google/gemini-2.5-pro` | Math, architecture, deep debug | $1.25/1M tok |
 | `MODEL_SIMPLE` | `vercel-ai-gateway/google/gemini-2.5-flash-lite` | Cron heartbeat | $0.015/1M tok |
 
@@ -137,7 +137,7 @@ HONEY_TG_ID=REPLACE_ME
 YOUR_WHATSAPP_NUMBER=REPLACE_ME
 HONEY_WHATSAPP_NUMBER=REPLACE_ME
 MODEL_INTERACTIVE=vercel-ai-gateway/google/gemini-2.5-flash
-MODEL_MEDIUM=vercel-ai-gateway/google/gemini-2.5-flash
+MODEL_MEDIUM=vercel-ai-gateway/anthropic/claude-sonnet-4-6
 MODEL_REASONING=vercel-ai-gateway/google/gemini-2.5-pro
 MODEL_SIMPLE=vercel-ai-gateway/google/gemini-2.5-flash-lite
 EOF

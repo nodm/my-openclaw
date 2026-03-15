@@ -5,7 +5,7 @@ Choose the right model tier for each task. Default to your current model and esc
 ## Default — MODEL_INTERACTIVE (Claude Sonnet 4.6)
 Use for all standard tasks: chat, Q&A, reminders, short writing, brief summaries.
 
-## Escalate to MODEL_MEDIUM (DeepSeek v3.2)
+## Escalate to MODEL_MEDIUM (Claude Sonnet 4.6)
 Use for longer or more structured tasks that don't require deep reasoning:
 - Writing, reviewing, or debugging code
 - Multi-step research or information gathering
