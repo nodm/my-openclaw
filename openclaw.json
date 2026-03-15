@@ -50,19 +50,19 @@
 
   bindings: [
     {
-      match: { channel: "telegram", peer: { kind: "user", id: "${YOUR_TG_ID}" } },
+      match: { channel: "telegram", peer: { kind: "dm", id: "${YOUR_TG_ID}" } },
       agentId: "main",
     },
     {
-      match: { channel: "telegram", peer: { kind: "user", id: "${HONEY_TG_ID}" } },
+      match: { channel: "telegram", peer: { kind: "dm", id: "${HONEY_TG_ID}" } },
       agentId: "honey",
     },
     {
-      match: { channel: "whatsapp", peer: { kind: "user", id: "${YOUR_WHATSAPP_NUMBER}" } },
+      match: { channel: "whatsapp", peer: { kind: "dm", id: "${YOUR_WHATSAPP_NUMBER}" } },
       agentId: "main",
     },
     {
-      match: { channel: "whatsapp", peer: { kind: "user", id: "${HONEY_WHATSAPP_NUMBER}" } },
+      match: { channel: "whatsapp", peer: { kind: "dm", id: "${HONEY_WHATSAPP_NUMBER}" } },
       agentId: "honey",
     },
   ],
