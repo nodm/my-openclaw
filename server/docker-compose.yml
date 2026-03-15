@@ -1,6 +1,7 @@
 # Template — copy to server at /root/docker-compose.yml
 # Requires: /root/.openclaw/.env  (see server/.env.example)
 # Access UI: ssh -N -L 18789:127.0.0.1:18789 root@<serverIp>  →  http://localhost:18789
+# Browser control: ssh -N -L 18791:127.0.0.1:18791 root@<serverIp>  →  http://localhost:18791
 services:
   openclaw-gateway:
     image: ghcr.io/openclaw/openclaw:latest
@@ -10,14 +11,12 @@ services:
       HOME: /home/node
       NODE_ENV: production
       TERM: xterm-256color
-      OPENCLAW_GATEWAY_BIND: lan
+      OPENCLAW_GATEWAY_BIND: all
       OPENCLAW_GATEWAY_PORT: "18789"
       XDG_CONFIG_HOME: /home/node/.openclaw
     volumes:
       - /root/.openclaw:/home/node/.openclaw
-    ports:
-      # Never exposed publicly — access via SSH tunnel only
-      - "127.0.0.1:18789:18789"
+    network_mode: host
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:18789/healthz"]
       interval: 30s
@@ -28,7 +27,7 @@ services:
   openclaw-cli:
     # Run one-off CLI commands: docker compose run --rm openclaw-cli channels login
     image: ghcr.io/openclaw/openclaw:latest
-    network_mode: "service:openclaw-gateway"
+    network_mode: host
     env_file: /root/.openclaw/.env
     environment:
       HOME: /home/node
