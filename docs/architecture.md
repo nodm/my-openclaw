@@ -110,13 +110,13 @@ cron trigger                                    ──► agent: cron
 
 ## Model tiers
 
-Models are injected from `.env` — swapping a tier requires only an env change + `docker compose restart`, no config file edit.
+Models are injected from `.env` — swapping a tier requires an env change + `docker compose up -d --force-recreate`.
 
 | Env var | Model | When |
 |---------|-------|------|
-| `MODEL_INTERACTIVE` | `vercel-ai-gateway/anthropic/claude-sonnet-4.6` | All user chat |
-| `MODEL_MEDIUM` | `vercel-ai-gateway/deepseek/deepseek-v3.2` | Research, code, multi-step |
-| `MODEL_REASONING` | `vercel-ai-gateway/deepseek/deepseek-v3.2-thinking` | Math, architecture, deep debug |
+| `MODEL_INTERACTIVE` | `vercel-ai-gateway/google/gemini-2.5-flash` | All user chat |
+| `MODEL_MEDIUM` | `vercel-ai-gateway/google/gemini-2.5-flash` | Research, code, multi-step |
+| `MODEL_REASONING` | `vercel-ai-gateway/google/gemini-2.5-pro` | Math, architecture, deep debug |
 | `MODEL_SIMPLE` | `vercel-ai-gateway/google/gemini-2.5-flash-lite` | Cron heartbeat |
 
 The routing skill (`workspace/skills/routing/SKILL.md`) instructs the agent when to escalate to `MODEL_MEDIUM` or `MODEL_REASONING` autonomously.

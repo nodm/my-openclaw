@@ -6,10 +6,10 @@ OpenClaw on Hetzner CPX22 (hel1) with Vercel AI Gateway and tiered model routing
 
 | Env var | Slug | Use case | ~Cost |
 |---------|------|----------|-------|
-| `MODEL_INTERACTIVE` | `vercel-ai-gateway/anthropic/claude-sonnet-4.6` | Main agent — all user chat | $3/1M tok |
-| `MODEL_MEDIUM` | `vercel-ai-gateway/deepseek/deepseek-v3.2` | Research, code, multi-step | $0.14/1M tok |
-| `MODEL_REASONING` | `vercel-ai-gateway/deepseek/deepseek-v3.2-thinking` | Math, architecture, deep debug | $0.55/1M tok |
-| `MODEL_SIMPLE` | `vercel-ai-gateway/google/gemini-2.5-flash-lite` | Cron heartbeat | $0.01/1M tok |
+| `MODEL_INTERACTIVE` | `vercel-ai-gateway/google/gemini-2.5-flash` | Main agent — all user chat | $0.15/1M tok |
+| `MODEL_MEDIUM` | `vercel-ai-gateway/google/gemini-2.5-flash` | Research, code, multi-step | $0.15/1M tok |
+| `MODEL_REASONING` | `vercel-ai-gateway/google/gemini-2.5-pro` | Math, architecture, deep debug | $1.25/1M tok |
+| `MODEL_SIMPLE` | `vercel-ai-gateway/google/gemini-2.5-flash-lite` | Cron heartbeat | $0.015/1M tok |
 
 ## Project layout
 
@@ -91,10 +91,10 @@ df -h /root/.openclaw         # should show 10G volume mounted
 1. Go to [vercel.com/ai-gateway](https://vercel.com/ai-gateway).
 2. Create a new API key — copy the `vai-…` value.
 3. Confirm these models are available in the catalog:
-   - `deepseek/deepseek-v3.2`
-   - `deepseek/deepseek-v3.2-thinking`
+   - `google/gemini-2.5-flash`
+   - `google/gemini-2.5-pro`
    - `google/gemini-2.5-flash-lite`
-   - `anthropic/claude-sonnet-4.6`
+   - `anthropic/claude-sonnet-4.6` (optional — upgrade `MODEL_INTERACTIVE` for higher quality)
 
 ## Step 5 — Review openclaw.json
 
@@ -136,9 +136,9 @@ YOUR_TG_ID=REPLACE_ME
 HONEY_TG_ID=REPLACE_ME
 YOUR_WHATSAPP_NUMBER=REPLACE_ME
 HONEY_WHATSAPP_NUMBER=REPLACE_ME
-MODEL_INTERACTIVE=vercel-ai-gateway/anthropic/claude-sonnet-4.6
-MODEL_MEDIUM=vercel-ai-gateway/deepseek/deepseek-v3.2
-MODEL_REASONING=vercel-ai-gateway/deepseek/deepseek-v3.2-thinking
+MODEL_INTERACTIVE=vercel-ai-gateway/google/gemini-2.5-flash
+MODEL_MEDIUM=vercel-ai-gateway/google/gemini-2.5-flash
+MODEL_REASONING=vercel-ai-gateway/google/gemini-2.5-pro
 MODEL_SIMPLE=vercel-ai-gateway/google/gemini-2.5-flash-lite
 EOF
 chmod 600 /root/.openclaw/.env
@@ -211,13 +211,14 @@ docker compose up -d
 
 ### Swap a model tier
 
-Edit `/root/.openclaw/.env` on the server, then restart:
+Edit `.env` locally, push to server, then recreate (restart is not enough for `.env` changes):
 
 ```bash
-docker compose restart
+scp .env root@<serverIp>:/root/.openclaw/.env
+ssh root@<serverIp> 'cd /root && docker compose up -d --force-recreate'
 ```
 
-Also update the hardcoded slugs in `workspace/skills/routing/SKILL.md` and re-rsync.
+Also update the slugs in `workspace/skills/routing/SKILL.md` and re-rsync if you change `MODEL_MEDIUM` or `MODEL_REASONING`.
 
 ### View logs
 

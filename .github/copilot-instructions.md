@@ -55,10 +55,10 @@ Inbound messages arrive via **Vercel AI Gateway** (outbound-initiated webhook fr
 **Model tiers** (set in server `.env`, injected into `openclaw.json`):
 | Var | Model | Use case |
 |-----|-------|----------|
-| `MODEL_INTERACTIVE` | Claude Sonnet 4.6 | All user chat ($3/1M tok) |
-| `MODEL_MEDIUM` | DeepSeek v3.2 | Research, code, multi-step ($0.14/1M tok) |
-| `MODEL_REASONING` | DeepSeek v3.2-thinking | Math, architecture, deep debug ($0.55/1M tok) |
-| `MODEL_SIMPLE` | Gemini 2.5 Flash Lite | Cron heartbeat ($0.01/1M tok) |
+| `MODEL_INTERACTIVE` | Gemini 2.5 Flash | All user chat ($0.15/1M tok) |
+| `MODEL_MEDIUM` | Gemini 2.5 Flash | Research, code, multi-step ($0.15/1M tok) |
+| `MODEL_REASONING` | Gemini 2.5 Pro | Math, architecture, deep debug ($1.25/1M tok) |
+| `MODEL_SIMPLE` | Gemini 2.5 Flash Lite | Cron heartbeat ($0.015/1M tok) |
 
 ## Workspace file conventions
 
