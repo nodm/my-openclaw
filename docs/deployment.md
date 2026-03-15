@@ -195,7 +195,10 @@ Or just message your Telegram bot — it should respond via Vercel AI Gateway.
 
 ```bash
 ssh root@<serverIp>
-cd /root && docker compose restart
+cd /root && docker compose restart   # for openclaw.json changes
+
+# For .env changes, restart alone is NOT enough — must recreate:
+cd /root && docker compose up -d --force-recreate
 ```
 
 ### Update OpenClaw version
