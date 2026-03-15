@@ -1,0 +1,5 @@
+encryptionsalt: v1:vw54J2aNVOg=:v1:RngrikeY6tlxIWoz:A9TjPL29/X8nw1cBS9vIIlKiKlGxnQ==
+config:
+  hcloud:token:
+    secure: v1:GUws0215fSGDTJGc:26O6CTHWCSDzarVgFmc3e+8STkgbbq62NriaCv2aiTzTpYpA5xc0h0Etn6u2RvoNS8PYG0Sx1aRQr9pSg/m5XB9AfDCyTfqvOz5rMF3q0uA=
+  openclaw-infra:sshPublicKey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP1ptuAdcgoVRw7nI0pgImgrl0nhG1GkpFJxJTOYaLST openclaw-hetzner"

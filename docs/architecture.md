@@ -17,7 +17,7 @@ How the system fits together — components, data flows, agent topology, and con
            │ SSH tunnel                   │ SSH tunnel
            ▼                              ▼
 ┌─────────────────────────────────────────────────────────┐
-│  Hetzner CX22 — hel1  (root@<serverIp>)                 │
+│  Hetzner CPX22 — hel1  (root@<serverIp>)                 │
 │                                                          │
 │  Docker container: openclaw                             │
 │  ├── gateway  →  127.0.0.1:18789                        │
@@ -149,7 +149,7 @@ Provisioned by Pulumi (`infra/`):
 
 | Resource | Value |
 |----------|-------|
-| Server | Hetzner CX22, hel1 |
+| Server | Hetzner CPX22, hel1 |
 | OS | Ubuntu 24.04 |
 | Volume | 10 GB, mounted at `/root/.openclaw` |
 | Firewall | SSH (22) inbound only; all outbound allowed |

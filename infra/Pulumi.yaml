@@ -1,3 +1,6 @@
 name: openclaw-infra
-runtime: nodejs
-description: OpenClaw on Hetzner CX22 — SSH key, firewall, volume, server
+runtime:
+  name: nodejs
+  options:
+    packagemanager: pnpm
+description: OpenClaw on Hetzner CPX22 — SSH key, firewall, volume, server

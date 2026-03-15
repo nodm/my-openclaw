@@ -1,6 +1,6 @@
 # Deployment Guide
 
-OpenClaw on Hetzner CX22 (hel1) with Vercel AI Gateway and tiered model routing.
+OpenClaw on Hetzner CPX22 (hel1) with Vercel AI Gateway and tiered model routing.
 
 ## Model tier reference
 

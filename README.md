@@ -1,6 +1,6 @@
 # my-open-claw
 
-Personal OpenClaw deployment — Hetzner CX22 (hel1), Vercel AI Gateway, Telegram.
+Personal OpenClaw deployment — Hetzner CPX22 (hel1), Vercel AI Gateway, Telegram.
 
 ## Docs
 

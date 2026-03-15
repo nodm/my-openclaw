@@ -40,7 +40,7 @@ ssh root@<serverIp> "cd /root && docker compose build --no-cache && docker compo
 
 ## Architecture overview
 
-Three agents run in Docker on a Hetzner CX22 (Ubuntu 24.04, hel1):
+Three agents run in Docker on a Hetzner CPX22 (Ubuntu 24.04, hel1):
 
 | Agent id | Who | Workspace | Model |
 |----------|-----|-----------|-------|
@@ -108,7 +108,7 @@ Common types: `feat`, `fix`, `docs`, `chore`, `refactor`.
 ## Infrastructure
 
 Provisioned via Pulumi (`infra/`, TypeScript/Node). Key facts:
-- Hetzner CX22, region `hel1`
+- Hetzner CPX22, region `hel1`
 - 10 GB Hetzner Volume mounted at `/root/.openclaw`
 - Firewall: inbound SSH (22) only; all other access via tunnel or Tailscale
 
