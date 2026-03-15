@@ -49,7 +49,7 @@ openclaw.json          # Gateway config — agents, channels, bindings, model ti
 cd infra
 pnpm install
 pulumi login --local          # or 'pulumi login' for Pulumi Cloud
-pulumi stack init prod
+pulumi stack init prod        # if first time; use 'pulumi stack select prod' if stack exists
 pulumi config set hcloud:token $HCLOUD_TOKEN --secret
 pulumi config set sshPublicKey "$(cat ~/.ssh/id_ed25519.pub)"
 ```
@@ -114,6 +114,9 @@ rsync -av --delete \
   --exclude 'sessions/' \
   workspace/ \
   $SERVER:/root/.openclaw/workspace/
+
+# Fix ownership after every rsync (container runs as uid 1000)
+ssh $SERVER 'chown -R 1000:1000 /root/.openclaw'
 ```
 
 ## Step 7 — Server .env and docker-compose.yml
@@ -154,7 +157,7 @@ ssh root@<serverIp>
 cd /root
 docker compose pull               # pull latest image (~1 min)
 docker compose up -d
-docker compose logs -f            # watch for "Gateway listening on :18789"
+docker compose logs -f            # watch for "[gateway] listening on ws://127.0.0.1:18789"
 ```
 
 ## Step 9 — Configure routing skill
