@@ -61,6 +61,7 @@ Telegram DM → sender id ${YOUR_TG_ID}          ──► agent: main
 Telegram DM → sender id ${HONEY_TG_ID}         ──► agent: honey
 WhatsApp DM → ${YOUR_WHATSAPP_NUMBER}           ──► agent: main
 WhatsApp DM → ${HONEY_WHATSAPP_NUMBER}          ──► agent: honey
+Discord DM  → user id ${YOUR_DISCORD_ID}        ──► agent: main
 cron trigger                                    ──► agent: cron
 ```
 
@@ -91,6 +92,7 @@ cron trigger                                    ──► agent: cron
     { match: { channel: "telegram", peer: { kind: "user", id: "${HONEY_TG_ID}" } },     agentId: "honey" },
     { match: { channel: "whatsapp", peer: { kind: "user", id: "${YOUR_WHATSAPP_NUMBER}" } },  agentId: "main" },
     { match: { channel: "whatsapp", peer: { kind: "user", id: "${HONEY_WHATSAPP_NUMBER}" } }, agentId: "honey" },
+    { match: { channel: "discord", peer: { kind: "dm",   id: "${YOUR_DISCORD_ID}" } },        agentId: "main" },
   ],
 
   channels: {
@@ -101,6 +103,11 @@ cron trigger                                    ──► agent: cron
     whatsapp: {
       dmPolicy: "pairing",
       allowFrom: ["${YOUR_WHATSAPP_NUMBER}", "${HONEY_WHATSAPP_NUMBER}"],
+    },
+    discord: {
+      dmPolicy: "pairing",
+      allowFrom: ["${YOUR_DISCORD_ID}"],
+      token: "${DISCORD_BOT_TOKEN}",
     },
   },
 }

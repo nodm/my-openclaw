@@ -50,7 +50,7 @@ Three agents run in Docker on a Hetzner CPX22 (Ubuntu 24.04, hel1):
 
 Session isolation means `honey` has no access to your `MEMORY.md`, `USER.md`, or conversation history, and vice versa.
 
-Inbound messages arrive via **Vercel AI Gateway** (outbound-initiated webhook from Telegram/WhatsApp) — the gateway port `18789` is never exposed publicly.
+Inbound messages arrive via **Vercel AI Gateway** (outbound-initiated webhook from Telegram/WhatsApp/Discord) — the gateway port `18789` is never exposed publicly.
 
 **Model tiers** (set in server `.env`, injected into `openclaw.json`):
 | Var | Model | Use case |
@@ -87,6 +87,8 @@ The `.env` file lives **only on the server** at `/root/.openclaw/.env`. It is `.
 | `OPENCLAW_GATEWAY_TOKEN` | Random 32-byte hex (`openssl rand -hex 32`), auth for Control UI |
 | `YOUR_TG_ID` / `HONEY_TG_ID` | Telegram user IDs (find via @userinfobot) |
 | `YOUR_WHATSAPP_NUMBER` / `HONEY_WHATSAPP_NUMBER` | E.164 phone numbers |
+| `DISCORD_BOT_TOKEN` | Discord bot token from Developer Portal |
+| `YOUR_DISCORD_ID` / `DISCORD_SERVER_ID` | Discord user/server IDs (enable Developer Mode to copy) |
 | `MODEL_*` | Model slugs — not secret, but env-injected for easy swapping |
 
 ## Commit conventions

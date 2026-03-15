@@ -65,6 +65,10 @@
       match: { channel: "whatsapp", peer: { kind: "dm", id: "${HONEY_WHATSAPP_NUMBER}" } },
       agentId: "honey",
     },
+    {
+      match: { channel: "discord", peer: { kind: "dm", id: "${YOUR_DISCORD_ID}" } },
+      agentId: "main",
+    },
   ],
 
   channels: {
@@ -76,6 +80,11 @@
     whatsapp: {
       dmPolicy: "pairing",
       allowFrom: ["${YOUR_WHATSAPP_NUMBER}", "${HONEY_WHATSAPP_NUMBER}"],
+    },
+    discord: {
+      dmPolicy: "pairing",
+      allowFrom: ["${YOUR_DISCORD_ID}"],
+      token: "${DISCORD_BOT_TOKEN}",
     },
   },
 }
