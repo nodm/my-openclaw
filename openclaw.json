@@ -58,14 +58,6 @@
       agentId: "honey",
     },
     {
-      match: { channel: "whatsapp", peer: { kind: "dm", id: "${YOUR_WHATSAPP_NUMBER}" } },
-      agentId: "main",
-    },
-    {
-      match: { channel: "whatsapp", peer: { kind: "dm", id: "${HONEY_WHATSAPP_NUMBER}" } },
-      agentId: "honey",
-    },
-    {
       match: { channel: "discord", peer: { kind: "dm", id: "${YOUR_DISCORD_ID}" } },
       agentId: "main",
     },
@@ -76,10 +68,6 @@
       dmPolicy: "pairing",
       allowFrom: ["${YOUR_TG_ID}", "${HONEY_TG_ID}"],
       botToken: "${TELEGRAM_BOT_TOKEN}",
-    },
-    whatsapp: {
-      dmPolicy: "pairing",
-      allowFrom: ["${YOUR_WHATSAPP_NUMBER}", "${HONEY_WHATSAPP_NUMBER}"],
     },
     discord: {
       dmPolicy: "pairing",
