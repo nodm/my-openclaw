@@ -11,7 +11,7 @@ Personal OpenClaw deployment config — not a source code project. Manages deplo
 - `openclaw.json` — Gateway config (agents, channels, bindings). Uses JSON5 with `${ENV_VAR}` interpolation from server `.env`.
 - `workspace/` — Source of truth for `main` + `cron` agent runtime files. Synced one-way to server via rsync.
 - `workspace-honey/` — Source of truth for `honey` agent. Same structure, synced separately.
-- `server/.env.example` — Template for server-side `.env` (never committed). Systemd service is created by `openclaw onboard --install-daemon`.
+- `server/.env.example` — Template for server-side `.env` (never committed). Gateway service installed via `openclaw daemon install`.
 - `infra/` — Pulumi IaC (TypeScript). Provisions Hetzner CPX22, volume, firewall.
 - `docs/` — Architecture, deployment, access/sync guides.
 
@@ -28,13 +28,13 @@ rsync -av --delete --exclude '.env' --exclude 'sessions/' \
 
 # Push gateway config and restart
 scp openclaw.json root@<serverIp>:/root/.openclaw/openclaw.json
-ssh root@<serverIp> "systemctl restart openclaw"
+ssh root@<serverIp> "openclaw daemon restart"
 
 # Restart (required after .env changes)
-ssh root@<serverIp> "systemctl restart openclaw"
+ssh root@<serverIp> "openclaw daemon restart"
 
 # View logs
-ssh root@<serverIp> "journalctl -u openclaw -f -n 100"
+ssh root@<serverIp> "openclaw logs --follow"
 
 # Open Control UI (via Tailscale — no tunnel needed)
 # https://<hostname>.<tailnet>/
@@ -52,7 +52,7 @@ Hetzner CPX22, hel1, Ubuntu 24.04. 10 GB volume at `/root/.openclaw`. Firewall: 
 
 ## Agent topology
 
-Three agents in one systemd-managed Node.js process:
+Three agents in one gateway process (systemd service `openclaw-gateway`):
 
 | Agent | Workspace | Model tier | Purpose |
 |-------|-----------|------------|---------|
@@ -64,7 +64,7 @@ Agents are session-isolated — `honey` cannot see your `MEMORY.md`, `USER.md`, 
 
 ## Channel routing
 
-Bindings in `openclaw.json` map Telegram/WhatsApp/Discord DMs to agents by sender ID. `dmPolicy: "pairing"` requires explicit approval for new senders. Gateway binds to loopback; accessed via Tailscale Serve.
+Bindings in `openclaw.json` map Telegram and Discord DMs to agents by sender ID. `dmPolicy: "pairing"` requires explicit approval for new senders. Gateway binds to loopback; accessed via Tailscale Serve.
 
 ## Workspace file roles
 
@@ -89,7 +89,7 @@ Set in server `.env`, interpolated into `openclaw.json`. All models via Google A
 | `MODEL_REASONING` | gemini-2.5-pro | Math, architecture, deep debug |
 | `MODEL_SIMPLE` | gemini-2.5-flash-lite | Cron heartbeat |
 
-Swapping a model: edit `.env` on server, then `systemctl restart openclaw`.
+Swapping a model: edit `.env` on server, then `openclaw daemon restart`.
 
 ## Conventions
 

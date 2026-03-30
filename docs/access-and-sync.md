@@ -76,7 +76,7 @@ Add `-n` (dry-run) first if you want to preview changes.
 |------|-----|
 | `/root/.openclaw/.env` | Contains secrets — never commit or sync back |
 | `/root/.openclaw/agents/*/sessions/` | Runtime session state |
-| `/root/.openclaw/credentials/` | WhatsApp QR session, pairing allowlists |
+| `/root/.openclaw/credentials/` | Pairing allowlists, credential store |
 
 ### Convenience aliases
 
@@ -100,5 +100,5 @@ alias openclaw-sync-honey='rsync -av --delete \
 
 ```bash
 scp openclaw.json root@<serverIp>:/root/.openclaw/openclaw.json
-ssh root@<serverIp> "systemctl restart openclaw"
+ssh root@<serverIp> "openclaw daemon restart"
 ```

@@ -77,9 +77,8 @@ VOLUME_DEV=<volumeLinuxDevice>   # e.g. /dev/disk/by-id/scsi-0HC_Volume_12345678
 mount "$VOLUME_DEV" /root/.openclaw
 echo "$VOLUME_DEV /root/.openclaw ext4 defaults,nofail 0 2" >> /etc/fstab
 
-# Create directory structure and fix ownership for openclaw user
+# Create directory structure
 mkdir -p /root/.openclaw/workspace /root/.openclaw/workspace-honey
-chown -R openclaw:openclaw /root/.openclaw
 
 # Verify
 df -h /root/.openclaw         # should show 10G volume mounted
@@ -109,9 +108,6 @@ rsync -av --delete \
   --exclude 'sessions/' \
   workspace/ \
   $SERVER:/root/.openclaw/workspace/
-
-# Fix ownership after every rsync
-ssh $SERVER 'chown -R openclaw:openclaw /root/.openclaw'
 ```
 
 ## Step 7 — Server .env and openclaw.json
@@ -129,8 +125,8 @@ OPENCLAW_GATEWAY_TOKEN=$(openssl rand -hex 32)
 GOG_KEYRING_PASSWORD=$(openssl rand -hex 32)
 YOUR_TG_ID=REPLACE_ME
 HONEY_TG_ID=REPLACE_ME
-YOUR_WHATSAPP_NUMBER=REPLACE_ME
-HONEY_WHATSAPP_NUMBER=REPLACE_ME
+DISCORD_BOT_TOKEN=REPLACE_ME
+YOUR_DISCORD_ID=REPLACE_ME
 OPENCLAW_GATEWAY_BIND=loopback
 MODEL_INTERACTIVE=google/gemini-2.5-flash
 MODEL_MEDIUM=google/gemini-2.5-flash
@@ -143,13 +139,13 @@ chmod 600 /root/.openclaw/.env
 scp openclaw.json root@<serverIp>:/root/.openclaw/openclaw.json
 ```
 
-## Step 8 — Onboard, Tailscale, and start
+## Step 8 — Install gateway service, Tailscale, and start
 
 ```bash
 ssh root@<serverIp>
 
-# Run OpenClaw onboarding (creates systemd service)
-openclaw onboard --install-daemon
+# Install the gateway as a systemd service
+openclaw daemon install
 
 # Join your tailnet (follow the auth URL)
 tailscale up
@@ -158,8 +154,8 @@ tailscale up
 tailscale serve --bg 18789
 
 # Start OpenClaw
-systemctl start openclaw
-journalctl -u openclaw -f      # watch for "[gateway] listening on ws://127.0.0.1:18789"
+openclaw daemon start
+openclaw logs --follow      # watch for "[gateway] listening on ws://127.0.0.1:18789"
 ```
 
 ## Step 9 — Configure routing skill
@@ -191,7 +187,7 @@ Or just message your Telegram bot — it should respond via Google AI.
 
 ```bash
 ssh root@<serverIp>
-systemctl restart openclaw     # for openclaw.json or .env changes
+openclaw daemon restart       # for openclaw.json or .env changes
 ```
 
 ### Update OpenClaw version
@@ -199,7 +195,7 @@ systemctl restart openclaw     # for openclaw.json or .env changes
 ```bash
 ssh root@<serverIp>
 curl -fsSL https://openclaw.ai/install.sh | bash
-systemctl restart openclaw
+openclaw daemon restart
 ```
 
 ### Swap a model tier
@@ -209,7 +205,7 @@ Edit `.env` on server, then restart:
 ```bash
 ssh root@<serverIp>
 # edit /root/.openclaw/.env
-systemctl restart openclaw
+openclaw daemon restart
 ```
 
 Also update the slugs in `workspace/skills/routing/SKILL.md` and re-rsync if you change `MODEL_MEDIUM` or `MODEL_REASONING`.
@@ -217,5 +213,5 @@ Also update the slugs in `workspace/skills/routing/SKILL.md` and re-rsync if you
 ### View logs
 
 ```bash
-journalctl -u openclaw -f -n 100
+openclaw logs --follow
 ```
