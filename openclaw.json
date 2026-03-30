@@ -1,6 +1,6 @@
 // ~/.openclaw/openclaw.json
 // Copy to server: scp openclaw.json root@<serverIp>:/root/.openclaw/openclaw.json
-// Then restart:   ssh root@<serverIp> "systemctl restart openclaw"
+// Then restart:   ssh root@<serverIp> "openclaw daemon restart"
 {
   gateway: {
     mode: "local",
@@ -63,16 +63,29 @@
     },
   ],
 
+  commands: {
+    native: "auto",
+    nativeSkills: "auto",
+    restart: true,
+    ownerDisplay: "raw",
+  },
+
   channels: {
     telegram: {
+      enabled: true,
       dmPolicy: "pairing",
       allowFrom: ["${YOUR_TG_ID}", "${HONEY_TG_ID}"],
       botToken: "${TELEGRAM_BOT_TOKEN}",
+      groupPolicy: "allowlist",
+      streaming: "partial",
     },
     discord: {
+      enabled: true,
       dmPolicy: "pairing",
       allowFrom: ["${YOUR_DISCORD_ID}"],
       token: "${DISCORD_BOT_TOKEN}",
+      groupPolicy: "allowlist",
+      streaming: "off",
     },
   },
 }
