@@ -161,7 +161,7 @@ Provisioned by Pulumi (`infra/`):
 | OS | Ubuntu 24.04 |
 | Volume | 10 GB, mounted at `/root/.openclaw` |
 | Firewall | SSH (22) inbound only; all outbound allowed |
-| Bootstrap | `cloud-init.yaml` — installs Node.js, OpenClaw, Tailscale, systemd service |
+| Bootstrap | `cloud-init.yaml` — installs OpenClaw (official installer), Tailscale |
 
 The gateway port (18789) is **never open on the firewall**. Access only via Tailscale Serve. See [access-and-sync.md](access-and-sync.md).
 

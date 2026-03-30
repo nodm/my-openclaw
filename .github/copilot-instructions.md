@@ -6,8 +6,7 @@ This repository is a **personal OpenClaw deployment configuration** — not a so
 
 - `docs/` — Architecture, deployment, and access/sync guides. Read these before making changes.
 - `workspace/` — **Source of truth** for agent runtime files. Synced one-way to the server via rsync. Never contains secrets.
-- `server/.env.example` — Template for the server-side `.env` (never commit the real `.env`).
-- `server/openclaw.service` — Systemd unit template; deployed via cloud-init to `/etc/systemd/system/openclaw.service`.
+- `server/.env.example` — Template for the server-side `.env` (never commit the real `.env`). Systemd service is created by `openclaw onboard --install-daemon`.
 - `openclaw.json` — Gateway config (agents, channels, bindings). Deployed manually via `scp` then `systemctl restart openclaw`.
 - `infra/` — Pulumi IaC (TypeScript/Node). Provisions Hetzner server, volume, and firewall.
 

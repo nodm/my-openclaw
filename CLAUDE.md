@@ -11,8 +11,7 @@ Personal OpenClaw deployment config — not a source code project. Manages deplo
 - `openclaw.json` — Gateway config (agents, channels, bindings). Uses JSON5 with `${ENV_VAR}` interpolation from server `.env`.
 - `workspace/` — Source of truth for `main` + `cron` agent runtime files. Synced one-way to server via rsync.
 - `workspace-honey/` — Source of truth for `honey` agent. Same structure, synced separately.
-- `server/openclaw.service` — Systemd unit template; lives at `/etc/systemd/system/openclaw.service` on server.
-- `server/.env.example` — Template for server-side `.env` (never committed).
+- `server/.env.example` — Template for server-side `.env` (never committed). Systemd service is created by `openclaw onboard --install-daemon`.
 - `infra/` — Pulumi IaC (TypeScript). Provisions Hetzner CPX22, volume, firewall.
 - `docs/` — Architecture, deployment, access/sync guides.
 

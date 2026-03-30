@@ -19,10 +19,9 @@ infra/
   package.json
   tsconfig.json
   index.ts             # SshKey + Firewall + Volume + Server + VolumeAttachment
-  cloud-init.yaml      # Node.js, OpenClaw, Tailscale, UFW, systemd service
+  cloud-init.yaml      # OpenClaw (via official installer), Tailscale, UFW
 
 server/
-  openclaw.service     # Template — deployed via cloud-init to /etc/systemd/system/
   .env.example         # Template — copy to server at /root/.openclaw/.env (fill secrets)
 
 workspace/             # Agent: main (you)
@@ -70,7 +69,7 @@ volumeLinuxDevice = /dev/disk/by-id/scsi-0HC_Volume_<id>
 
 ```bash
 ssh root@<serverIp>
-node --version                # should show v24.x
+openclaw --version            # should show installed version
 cat /root/bootstrap.log       # check for errors
 
 # Mount Hetzner volume (one-time — use volumeLinuxDevice from pulumi output)
@@ -146,10 +145,13 @@ chmod 600 /root/.openclaw/.env
 scp openclaw.json root@<serverIp>:/root/.openclaw/openclaw.json
 ```
 
-## Step 8 — Set up Tailscale and start
+## Step 8 — Onboard, Tailscale, and start
 
 ```bash
 ssh root@<serverIp>
+
+# Run OpenClaw onboarding (creates systemd service)
+openclaw onboard --install-daemon
 
 # Join your tailnet (follow the auth URL)
 tailscale up
@@ -198,7 +200,7 @@ systemctl restart openclaw     # for openclaw.json or .env changes
 
 ```bash
 ssh root@<serverIp>
-npm update -g @openclaw/openclaw
+curl -fsSL https://openclaw.ai/install.sh | bash
 systemctl restart openclaw
 ```
 
