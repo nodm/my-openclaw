@@ -1,15 +1,15 @@
 # Copilot Instructions
 
-This repository is a **personal OpenClaw deployment configuration** — not a source code project. It manages deployment docs, agent workspace seed files, and server config templates for an AI assistant running on Hetzner with Vercel AI Gateway.
+This repository is a **personal OpenClaw deployment configuration** — not a source code project. It manages deployment docs, agent workspace seed files, and server config templates for an AI assistant running on Hetzner with Google AI (Gemini).
 
 ## What lives where
 
 - `docs/` — Architecture, deployment, and access/sync guides. Read these before making changes.
 - `workspace/` — **Source of truth** for agent runtime files. Synced one-way to the server via rsync. Never contains secrets.
 - `server/.env.example` — Template for the server-side `.env` (never commit the real `.env`).
-- `server/docker-compose.yml` — Template; copy to `/root/docker-compose.yml` on the server.
-- `openclaw.json` — Gateway config (agents, channels, bindings). Deployed manually via `scp` then `docker compose restart`.
-- `infra/` — Pulumi IaC (TypeScript/Node). Not yet in this repo snapshot; provisions Hetzner server, volume, and firewall.
+- `server/openclaw.service` — Systemd unit template; deployed via cloud-init to `/etc/systemd/system/openclaw.service`.
+- `openclaw.json` — Gateway config (agents, channels, bindings). Deployed manually via `scp` then `systemctl restart openclaw`.
+- `infra/` — Pulumi IaC (TypeScript/Node). Provisions Hetzner server, volume, and firewall.
 
 ## Deployment workflows
 
@@ -23,24 +23,23 @@ rsync -av --delete \
 **Push gateway config and restart:**
 ```bash
 scp openclaw.json root@<serverIp>:/root/.openclaw/openclaw.json
-ssh root@<serverIp> "cd /root && docker compose restart"
+ssh root@<serverIp> "systemctl restart openclaw"
 ```
 
-**Open the Control UI** (port never exposed publicly — SSH tunnel required):
-```bash
-ssh -N -L 18789:127.0.0.1:18789 root@<serverIp>
-open http://localhost:18789
+**Open the Control UI** (via Tailscale — no tunnel needed):
+```
+https://<hostname>.<tailnet>/
 ```
 
-**View logs / rebuild:**
+**View logs / restart:**
 ```bash
-ssh root@<serverIp> "docker compose logs -f --tail=100"
-ssh root@<serverIp> "cd /root && docker compose build --no-cache && docker compose up -d"
+ssh root@<serverIp> "journalctl -u openclaw -f -n 100"
+ssh root@<serverIp> "systemctl restart openclaw"
 ```
 
 ## Architecture overview
 
-Three agents run in Docker on a Hetzner CPX22 (Ubuntu 24.04, hel1):
+Three agents run as a systemd-managed Node.js process on a Hetzner CPX22 (Ubuntu 24.04, hel1):
 
 | Agent id | Who | Workspace | Model |
 |----------|-----|-----------|-------|
@@ -50,13 +49,13 @@ Three agents run in Docker on a Hetzner CPX22 (Ubuntu 24.04, hel1):
 
 Session isolation means `honey` has no access to your `MEMORY.md`, `USER.md`, or conversation history, and vice versa.
 
-Inbound messages arrive via **Vercel AI Gateway** (outbound-initiated webhook from Telegram/WhatsApp/Discord) — the gateway port `18789` is never exposed publicly.
+Inbound messages arrive via outbound-initiated webhook from Telegram/WhatsApp/Discord — the gateway port `18789` binds to loopback only, accessed via Tailscale Serve.
 
 **Model tiers** (set in server `.env`, injected into `openclaw.json`):
 | Var | Model | Use case |
 |-----|-------|----------|
 | `MODEL_INTERACTIVE` | Gemini 2.5 Flash | All user chat ($0.15/1M tok) |
-| `MODEL_MEDIUM` | Claude Sonnet 4.6 | Research, code, multi-step ($3/1M tok) |
+| `MODEL_MEDIUM` | Gemini 2.5 Flash | Research, code, multi-step ($0.15/1M tok) |
 | `MODEL_REASONING` | Gemini 2.5 Pro | Math, architecture, deep debug ($1.25/1M tok) |
 | `MODEL_SIMPLE` | Gemini 2.5 Flash Lite | Cron heartbeat ($0.015/1M tok) |
 
@@ -82,7 +81,7 @@ The `.env` file lives **only on the server** at `/root/.openclaw/.env`. It is `.
 
 | Key | What |
 |-----|------|
-| `AI_GATEWAY_API_KEY` | Vercel AI Gateway key (`vai-…`) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google AI API key (from GCP console) |
 | `TELEGRAM_BOT_TOKEN` | From @BotFather |
 | `OPENCLAW_GATEWAY_TOKEN` | Random 32-byte hex (`openssl rand -hex 32`), auth for Control UI |
 | `YOUR_TG_ID` / `HONEY_TG_ID` | Telegram user IDs (find via @userinfobot) |
@@ -112,7 +111,7 @@ Common types: `feat`, `fix`, `docs`, `chore`, `refactor`.
 Provisioned via Pulumi (`infra/`, TypeScript/Node). Key facts:
 - Hetzner CPX22, region `hel1`
 - 10 GB Hetzner Volume mounted at `/root/.openclaw`
-- Firewall: inbound SSH (22) only; all other access via tunnel or Tailscale
+- Firewall: inbound SSH (22) only; access via Tailscale Serve
 
 **Convenience alias** (add to `~/.zshrc` for faster syncing):
 ```bash

@@ -1,15 +1,15 @@
 # Deployment Guide
 
-OpenClaw on Hetzner CPX22 (hel1) with Vercel AI Gateway and tiered model routing.
+OpenClaw on Hetzner CPX22 (hel1) with Google AI (Gemini) and tiered model routing.
 
 ## Model tier reference
 
 | Env var | Slug | Use case | ~Cost |
 |---------|------|----------|-------|
-| `MODEL_INTERACTIVE` | `vercel-ai-gateway/google/gemini-2.5-flash` | Main agent — all user chat | $0.15/1M tok |
-| `MODEL_MEDIUM` | `vercel-ai-gateway/anthropic/claude-sonnet-4-6` | Research, code, multi-step | $3/1M tok |
-| `MODEL_REASONING` | `vercel-ai-gateway/google/gemini-2.5-pro` | Math, architecture, deep debug | $1.25/1M tok |
-| `MODEL_SIMPLE` | `vercel-ai-gateway/google/gemini-2.5-flash-lite` | Cron heartbeat | $0.015/1M tok |
+| `MODEL_INTERACTIVE` | `google/gemini-2.5-flash` | Main agent — all user chat | $0.15/1M tok |
+| `MODEL_MEDIUM` | `google/gemini-2.5-flash` | Research, code, multi-step | $0.15/1M tok |
+| `MODEL_REASONING` | `google/gemini-2.5-pro` | Math, architecture, deep debug | $1.25/1M tok |
+| `MODEL_SIMPLE` | `google/gemini-2.5-flash-lite` | Cron heartbeat | $0.015/1M tok |
 
 ## Project layout
 
@@ -19,10 +19,10 @@ infra/
   package.json
   tsconfig.json
   index.ts             # SshKey + Firewall + Volume + Server + VolumeAttachment
-  cloud-init.yaml      # Docker, UFW, image pull, mount point
+  cloud-init.yaml      # Node.js, OpenClaw, Tailscale, UFW, systemd service
 
 server/
-  docker-compose.yml   # Template — copy to server at /root/docker-compose.yml
+  openclaw.service     # Template — deployed via cloud-init to /etc/systemd/system/
   .env.example         # Template — copy to server at /root/.openclaw/.env (fill secrets)
 
 workspace/             # Agent: main (you)
@@ -70,7 +70,7 @@ volumeLinuxDevice = /dev/disk/by-id/scsi-0HC_Volume_<id>
 
 ```bash
 ssh root@<serverIp>
-docker info                   # should succeed
+node --version                # should show v24.x
 cat /root/bootstrap.log       # check for errors
 
 # Mount Hetzner volume (one-time — use volumeLinuxDevice from pulumi output)
@@ -78,27 +78,25 @@ VOLUME_DEV=<volumeLinuxDevice>   # e.g. /dev/disk/by-id/scsi-0HC_Volume_12345678
 mount "$VOLUME_DEV" /root/.openclaw
 echo "$VOLUME_DEV /root/.openclaw ext4 defaults,nofail 0 2" >> /etc/fstab
 
-# Create directory structure and fix ownership for container user (uid 1000)
+# Create directory structure and fix ownership for openclaw user
 mkdir -p /root/.openclaw/workspace /root/.openclaw/workspace-honey
-chown -R 1000:1000 /root/.openclaw
+chown -R openclaw:openclaw /root/.openclaw
 
 # Verify
 df -h /root/.openclaw         # should show 10G volume mounted
 ```
 
-## Step 4 — Vercel AI Gateway
+## Step 4 — Google AI API key
 
-1. Go to [vercel.com/ai-gateway](https://vercel.com/ai-gateway).
-2. Create a new API key — copy the `vai-…` value.
-3. Confirm these models are available in the catalog:
-   - `google/gemini-2.5-flash`
-   - `google/gemini-2.5-pro`
-   - `google/gemini-2.5-flash-lite`
-   - `anthropic/claude-sonnet-4.6` (optional — upgrade `MODEL_INTERACTIVE` for higher quality)
+1. Go to [GCP console](https://console.cloud.google.com/) → APIs & Services → Library.
+2. Search "Generative Language API" → Enable it for your project.
+3. Go to APIs & Services → Credentials → Create Credentials → API Key.
+4. (Optional) Restrict the key to "Generative Language API" only.
+5. Verify: `curl "https://generativelanguage.googleapis.com/v1beta/models?key=YOUR_KEY"` — should return a model list.
 
 ## Step 5 — Review openclaw.json
 
-The `openclaw.json` in the repo root is ready to use. Open it and replace the placeholder comments if needed — all sensitive values are injected from `.env` via `${VAR}` substitution.
+The `openclaw.json` in the repo root is ready to use. All sensitive values are injected from `.env` via `${VAR}` substitution.
 
 Sync it to the server (covered in Step 7).
 
@@ -115,20 +113,20 @@ rsync -av --delete \
   workspace/ \
   $SERVER:/root/.openclaw/workspace/
 
-# Fix ownership after every rsync (container runs as uid 1000)
-ssh $SERVER 'chown -R 1000:1000 /root/.openclaw'
+# Fix ownership after every rsync
+ssh $SERVER 'chown -R openclaw:openclaw /root/.openclaw'
 ```
 
-## Step 7 — Server .env and docker-compose.yml
+## Step 7 — Server .env and openclaw.json
 
-SSH in and create the files:
+SSH in and create the `.env` file:
 
 ```bash
 ssh root@<serverIp>
 
 # .env — fill in real values
 cp /dev/stdin /root/.openclaw/.env << 'EOF'
-AI_GATEWAY_API_KEY=vai-REPLACE_ME
+GOOGLE_GENERATIVE_AI_API_KEY=REPLACE_ME
 TELEGRAM_BOT_TOKEN=REPLACE_ME
 OPENCLAW_GATEWAY_TOKEN=$(openssl rand -hex 32)
 GOG_KEYRING_PASSWORD=$(openssl rand -hex 32)
@@ -136,28 +134,32 @@ YOUR_TG_ID=REPLACE_ME
 HONEY_TG_ID=REPLACE_ME
 YOUR_WHATSAPP_NUMBER=REPLACE_ME
 HONEY_WHATSAPP_NUMBER=REPLACE_ME
-MODEL_INTERACTIVE=vercel-ai-gateway/google/gemini-2.5-flash
-MODEL_MEDIUM=vercel-ai-gateway/anthropic/claude-sonnet-4-6
-MODEL_REASONING=vercel-ai-gateway/google/gemini-2.5-pro
-MODEL_SIMPLE=vercel-ai-gateway/google/gemini-2.5-flash-lite
+OPENCLAW_GATEWAY_BIND=loopback
+MODEL_INTERACTIVE=google/gemini-2.5-flash
+MODEL_MEDIUM=google/gemini-2.5-flash
+MODEL_REASONING=google/gemini-2.5-pro
+MODEL_SIMPLE=google/gemini-2.5-flash-lite
 EOF
 chmod 600 /root/.openclaw/.env
 
 # openclaw.json
 scp openclaw.json root@<serverIp>:/root/.openclaw/openclaw.json
-
-# docker-compose.yml
-scp server/docker-compose.yml root@<serverIp>:/root/docker-compose.yml
 ```
 
-## Step 8 — Build and launch
+## Step 8 — Set up Tailscale and start
 
 ```bash
 ssh root@<serverIp>
-cd /root
-docker compose pull               # pull latest image (~1 min)
-docker compose up -d
-docker compose logs -f            # watch for "[gateway] listening on ws://127.0.0.1:18789"
+
+# Join your tailnet (follow the auth URL)
+tailscale up
+
+# Expose gateway via Tailscale Serve (HTTPS, tailnet-only)
+tailscale serve --bg 18789
+
+# Start OpenClaw
+systemctl start openclaw
+journalctl -u openclaw -f      # watch for "[gateway] listening on ws://127.0.0.1:18789"
 ```
 
 ## Step 9 — Configure routing skill
@@ -177,15 +179,9 @@ Also synced in Step 6. Edit `workspace/USER.md` on your Mac with your personal c
 
 ## Step 11 — Connect and verify
 
-```bash
-# Open SSH tunnel (keep running — or use autossh, see docs/access-and-sync.md)
-ssh -N -L 18789:127.0.0.1:18789 root@<serverIp> &
+Open `https://<hostname>.<tailnet>/` from any device on your tailnet — the Control UI should load.
 
-# Open Control UI
-open http://localhost:18789
-```
-
-Or just message your Telegram bot — it should respond via Vercel AI Gateway.
+Or just message your Telegram bot — it should respond via Google AI.
 
 ---
 
@@ -195,27 +191,25 @@ Or just message your Telegram bot — it should respond via Vercel AI Gateway.
 
 ```bash
 ssh root@<serverIp>
-cd /root && docker compose restart   # for openclaw.json changes
-
-# For .env changes, restart alone is NOT enough — must recreate:
-cd /root && docker compose up -d --force-recreate
+systemctl restart openclaw     # for openclaw.json or .env changes
 ```
 
 ### Update OpenClaw version
 
 ```bash
 ssh root@<serverIp>
-docker compose pull
-docker compose up -d
+npm update -g @openclaw/openclaw
+systemctl restart openclaw
 ```
 
 ### Swap a model tier
 
-Edit `.env` locally, push to server, then recreate (restart is not enough for `.env` changes):
+Edit `.env` on server, then restart:
 
 ```bash
-scp .env root@<serverIp>:/root/.openclaw/.env
-ssh root@<serverIp> 'cd /root && docker compose up -d --force-recreate'
+ssh root@<serverIp>
+# edit /root/.openclaw/.env
+systemctl restart openclaw
 ```
 
 Also update the slugs in `workspace/skills/routing/SKILL.md` and re-rsync if you change `MODEL_MEDIUM` or `MODEL_REASONING`.
@@ -223,5 +217,5 @@ Also update the slugs in `workspace/skills/routing/SKILL.md` and re-rsync if you
 ### View logs
 
 ```bash
-docker compose logs -f --tail=100
+journalctl -u openclaw -f -n 100
 ```

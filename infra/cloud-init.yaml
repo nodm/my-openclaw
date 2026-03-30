@@ -1,6 +1,6 @@
 #cloud-config
 # Bootstrap script for OpenClaw on Hetzner CPX22 (Ubuntu 24.04)
-# Installs Docker + UFW, pulls image, prepares mount point.
+# Installs Node.js, OpenClaw, Tailscale, UFW; creates systemd service.
 # NOTE: Hetzner volume must be mounted manually after pulumi up — see deployment.md Step 3.
 
 package_update: true
@@ -10,8 +10,19 @@ packages:
   - ufw
 
 runcmd:
-  # Install Docker
-  - curl -fsSL https://get.docker.com | sh
+  # Install Node.js 24 LTS via NodeSource
+  - curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+  - apt-get install -y nodejs
+
+  # Create dedicated system user for OpenClaw
+  - useradd --system --no-create-home --home-dir /root/.openclaw --shell /usr/sbin/nologin openclaw
+
+  # Install OpenClaw
+  # TODO: replace with actual package name from `docker inspect` (see plan Step 1.1)
+  - npm install -g @openclaw/openclaw
+
+  # Install Tailscale
+  - curl -fsSL https://tailscale.com/install.sh | sh
 
   # Firewall — SSH only inbound
   - ufw default deny incoming
@@ -22,11 +33,47 @@ runcmd:
   # Create mount point for Hetzner volume
   - mkdir -p /root/.openclaw
 
-  # Pull OpenClaw image so first `docker compose up` is fast
-  - docker pull ghcr.io/openclaw/openclaw:latest
+  # Enable OpenClaw systemd service (won't start until .env exists on volume)
+  - systemctl daemon-reload
+  - systemctl enable openclaw
 
   # Bootstrap log
   - echo "Bootstrapped at $(date --utc)" > /root/bootstrap.log
-  - echo "Docker $(docker --version)" >> /root/bootstrap.log
+  - echo "Node.js $(node --version)" >> /root/bootstrap.log
+  - echo "Tailscale $(tailscale version)" >> /root/bootstrap.log
   - echo "UFW enabled — SSH (22) only" >> /root/bootstrap.log
   - 'echo "NEXT: mount Hetzner volume to /root/.openclaw (see deployment.md Step 3)" >> /root/bootstrap.log'
+
+write_files:
+  - path: /etc/systemd/system/openclaw.service
+    content: |
+      [Unit]
+      Description=OpenClaw Gateway
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      User=openclaw
+      Group=openclaw
+      EnvironmentFile=/root/.openclaw/.env
+      Environment=NODE_ENV=production
+      Environment=HOME=/root/.openclaw
+      Environment=XDG_CONFIG_HOME=/root/.openclaw
+      Environment=OPENCLAW_GATEWAY_PORT=18789
+      Environment=TERM=xterm-256color
+      WorkingDirectory=/root/.openclaw
+      ExecStart=/usr/bin/openclaw gateway
+      Restart=always
+      RestartSec=5
+      NoNewPrivileges=true
+      ProtectSystem=strict
+      ReadWritePaths=/root/.openclaw
+      ProtectHome=false
+      PrivateTmp=true
+      StandardOutput=journal
+      StandardError=journal
+      SyslogIdentifier=openclaw
+
+      [Install]
+      WantedBy=multi-user.target

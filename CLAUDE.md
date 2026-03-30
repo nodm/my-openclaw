@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-Personal OpenClaw deployment config — not a source code project. Manages deployment docs, agent workspace seed files, infrastructure-as-code, and server config templates for an AI assistant running on Hetzner with Vercel AI Gateway.
+Personal OpenClaw deployment config — not a source code project. Manages deployment docs, agent workspace seed files, infrastructure-as-code, and server config templates for an AI assistant running on Hetzner with Google AI (Gemini).
 
 ## Repository layout
 
 - `openclaw.json` — Gateway config (agents, channels, bindings). Uses JSON5 with `${ENV_VAR}` interpolation from server `.env`.
 - `workspace/` — Source of truth for `main` + `cron` agent runtime files. Synced one-way to server via rsync.
 - `workspace-honey/` — Source of truth for `honey` agent. Same structure, synced separately.
-- `server/docker-compose.yml` — Template; lives at `/root/docker-compose.yml` on server.
+- `server/openclaw.service` — Systemd unit template; lives at `/etc/systemd/system/openclaw.service` on server.
 - `server/.env.example` — Template for server-side `.env` (never committed).
 - `infra/` — Pulumi IaC (TypeScript). Provisions Hetzner CPX22, volume, firewall.
 - `docs/` — Architecture, deployment, access/sync guides.
@@ -29,17 +29,16 @@ rsync -av --delete --exclude '.env' --exclude 'sessions/' \
 
 # Push gateway config and restart
 scp openclaw.json root@<serverIp>:/root/.openclaw/openclaw.json
-ssh root@<serverIp> "cd /root && docker compose restart"
+ssh root@<serverIp> "systemctl restart openclaw"
 
-# Force-recreate (required after .env changes)
-ssh root@<serverIp> "cd /root && docker compose up -d --force-recreate"
+# Restart (required after .env changes)
+ssh root@<serverIp> "systemctl restart openclaw"
 
 # View logs
-ssh root@<serverIp> "docker compose logs -f --tail=100"
+ssh root@<serverIp> "journalctl -u openclaw -f -n 100"
 
-# Open Control UI (SSH tunnel)
-ssh -N -L 18789:127.0.0.1:18789 root@<serverIp>
-# Then: http://localhost:18789
+# Open Control UI (via Tailscale — no tunnel needed)
+# https://<hostname>.<tailnet>/
 ```
 
 ## Infrastructure (Pulumi)
@@ -54,7 +53,7 @@ Hetzner CPX22, hel1, Ubuntu 24.04. 10 GB volume at `/root/.openclaw`. Firewall: 
 
 ## Agent topology
 
-Three agents in one Docker container (`ghcr.io/openclaw/openclaw:latest`):
+Three agents in one systemd-managed Node.js process:
 
 | Agent | Workspace | Model tier | Purpose |
 |-------|-----------|------------|---------|
@@ -66,7 +65,7 @@ Agents are session-isolated — `honey` cannot see your `MEMORY.md`, `USER.md`, 
 
 ## Channel routing
 
-Bindings in `openclaw.json` map Telegram/WhatsApp/Discord DMs to agents by sender ID. `dmPolicy: "pairing"` requires explicit approval for new senders. Gateway port 18789 is never publicly exposed.
+Bindings in `openclaw.json` map Telegram/WhatsApp/Discord DMs to agents by sender ID. `dmPolicy: "pairing"` requires explicit approval for new senders. Gateway binds to loopback; accessed via Tailscale Serve.
 
 ## Workspace file roles
 
@@ -82,16 +81,16 @@ Bindings in `openclaw.json` map Telegram/WhatsApp/Discord DMs to agents by sende
 
 ## Model tiers
 
-Set in server `.env`, interpolated into `openclaw.json`:
+Set in server `.env`, interpolated into `openclaw.json`. All models via Google AI (Generative Language API, GCP project).
 
 | Var | Current model | Use case |
 |-----|---------------|----------|
 | `MODEL_INTERACTIVE` | gemini-2.5-flash | All user chat |
-| `MODEL_MEDIUM` | claude-sonnet-4-6 | Research, code, multi-step |
+| `MODEL_MEDIUM` | gemini-2.5-flash | Research, code, multi-step |
 | `MODEL_REASONING` | gemini-2.5-pro | Math, architecture, deep debug |
 | `MODEL_SIMPLE` | gemini-2.5-flash-lite | Cron heartbeat |
 
-Swapping a model: edit `.env` on server, then `docker compose up -d --force-recreate`.
+Swapping a model: edit `.env` on server, then `systemctl restart openclaw`.
 
 ## Conventions
 

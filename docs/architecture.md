@@ -11,16 +11,17 @@ How the system fits together — components, data flows, agent topology, and con
 │  Mac (your machine)                                      │
 │                                                          │
 │  VS Code / terminal          Control UI                  │
-│  rsync workspace ──────────► http://localhost:18789      │
-│  scp openclaw.json           (via SSH tunnel)            │
-└──────────┬──────────────────────────────┬───────────────┘
-           │ SSH tunnel                   │ SSH tunnel
-           ▼                              ▼
+│  rsync workspace ──────────► https://<hostname>.<tailnet>│
+│  scp openclaw.json           (via Tailscale Serve)       │
+└──────────┬──────────────────────────────────────────────┘
+           │ SSH / Tailscale
+           ▼
 ┌─────────────────────────────────────────────────────────┐
 │  Hetzner CPX22 — hel1  (root@<serverIp>)                 │
 │                                                          │
-│  Docker container: openclaw                             │
-│  ├── gateway  →  127.0.0.1:18789                        │
+│  systemd service: openclaw                              │
+│  ├── gateway  →  127.0.0.1:18789 (loopback)             │
+│  ├── Tailscale Serve  →  https://<hostname>.<tailnet>    │
 │  ├── /root/.openclaw/openclaw.json    (config)           │
 │  ├── /root/.openclaw/.env             (secrets)          │
 │  ├── /root/.openclaw/workspace/       (you)              │
@@ -30,8 +31,8 @@ How the system fits together — components, data flows, agent topology, and con
 └──────────────────────┬──────────────────────────────────┘
                        │ outbound HTTPS
                        ▼
-             Vercel AI Gateway
-             └── Anthropic, DeepSeek, Google
+                  Google AI
+                  └── Gemini 2.5 (Flash, Pro, Flash Lite)
 ```
 
 Inbound channels (Telegram, WhatsApp) arrive as HTTPS webhooks / WebSocket maintained by the gateway. The gateway never has a public port — channels are outbound-initiated connections or Telegram long-polling.
@@ -75,7 +76,7 @@ cron trigger                                    ──► agent: cron
 {
   gateway: {
     mode: "local",
-    controlUi: { allowedOrigins: ["http://localhost:18789"] },
+    controlUi: { allowedOrigins: ["http://localhost:18789", "https://*"] },
   },
 
   agents: {
@@ -117,14 +118,14 @@ cron trigger                                    ──► agent: cron
 
 ## Model tiers
 
-Models are injected from `.env` — swapping a tier requires an env change + `docker compose up -d --force-recreate`.
+Models are injected from `.env` — swapping a tier requires an env change + `systemctl restart openclaw`.
 
 | Env var | Model | When |
 |---------|-------|------|
-| `MODEL_INTERACTIVE` | `vercel-ai-gateway/google/gemini-2.5-flash` | All user chat |
-| `MODEL_MEDIUM` | `vercel-ai-gateway/google/gemini-2.5-flash` | Research, code, multi-step |
-| `MODEL_REASONING` | `vercel-ai-gateway/google/gemini-2.5-pro` | Math, architecture, deep debug |
-| `MODEL_SIMPLE` | `vercel-ai-gateway/google/gemini-2.5-flash-lite` | Cron heartbeat |
+| `MODEL_INTERACTIVE` | `google/gemini-2.5-flash` | All user chat |
+| `MODEL_MEDIUM` | `google/gemini-2.5-flash` | Research, code, multi-step |
+| `MODEL_REASONING` | `google/gemini-2.5-pro` | Math, architecture, deep debug |
+| `MODEL_SIMPLE` | `google/gemini-2.5-flash-lite` | Cron heartbeat |
 
 The routing skill (`workspace/skills/routing/SKILL.md`) instructs the agent when to escalate to `MODEL_MEDIUM` or `MODEL_REASONING` autonomously.
 
@@ -160,9 +161,9 @@ Provisioned by Pulumi (`infra/`):
 | OS | Ubuntu 24.04 |
 | Volume | 10 GB, mounted at `/root/.openclaw` |
 | Firewall | SSH (22) inbound only; all outbound allowed |
-| Bootstrap | `cloud-init.yaml` — installs Docker, mounts volume, clones OpenClaw |
+| Bootstrap | `cloud-init.yaml` — installs Node.js, OpenClaw, Tailscale, systemd service |
 
-The gateway port (18789) is **never open on the firewall**. Access only via SSH tunnel. See [access-and-sync.md](access-and-sync.md).
+The gateway port (18789) is **never open on the firewall**. Access only via Tailscale Serve. See [access-and-sync.md](access-and-sync.md).
 
 ---
 
@@ -172,7 +173,7 @@ All secrets live exclusively in `/root/.openclaw/.env` on the server. Never comm
 
 | Key | What |
 |-----|------|
-| `AI_GATEWAY_API_KEY` | Vercel AI Gateway key (`vai-…`) |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google AI API key (from GCP console) |
 | `TELEGRAM_BOT_TOKEN` | From @BotFather |
 | `OPENCLAW_GATEWAY_TOKEN` | Random 32-byte hex, auth for Control UI |
 | `GOG_KEYRING_PASSWORD` | Random 32-byte hex, encrypts credential store (WhatsApp session etc.) |

@@ -1,80 +1,46 @@
 # Access and Sync
 
-How to reach the OpenClaw Control UI from your Mac and keep workspace files in sync.
+How to reach the OpenClaw Control UI from your devices and keep workspace files in sync.
 
 ---
 
 ## Accessing the Control UI
 
-The gateway binds to `127.0.0.1:18789` on the server (never exposed publicly). Access it via SSH tunnel.
+The gateway binds to `127.0.0.1:18789` on the server (loopback only, never exposed publicly). Access it via Tailscale Serve.
 
-### Option A — Manual tunnel (ad-hoc)
+### Tailscale Serve (recommended)
+
+Tailscale Serve proxies `https://<hostname>.<tailnet>/` → `http://127.0.0.1:18789` with auto-TLS. Only devices on your tailnet can reach it.
+
+**Server setup (one-time):**
+
+```bash
+ssh root@<serverIp>
+
+# Join your tailnet (follow the auth URL)
+tailscale up
+
+# Expose gateway via Tailscale Serve
+tailscale serve --bg 18789
+```
+
+**Access from any tailnet device:**
+
+```
+https://<hostname>.<tailnet>/
+```
+
+No tunnel, no port forwarding, works from Mac, phone, or any enrolled device.
+
+### Fallback — SSH tunnel
+
+If Tailscale is unavailable, you can still use an SSH tunnel:
 
 ```bash
 ssh -N -L 18789:127.0.0.1:18789 root@<serverIp>
 ```
 
 Then open `http://localhost:18789`. Kill with `Ctrl-C` when done.
-
-### Option B — autossh (persistent, reconnects automatically)
-
-```bash
-brew install autossh
-
-# Run once (add to ~/.zshrc or a launchd plist for auto-start)
-autossh -M 0 -f -N \
-  -o "ServerAliveInterval 30" \
-  -o "ServerAliveCountMax 3" \
-  -L 18789:127.0.0.1:18789 \
-  root@<serverIp>
-```
-
-To persist across Mac reboots, create a launchd plist:
-
-```xml
-<!-- ~/Library/LaunchAgents/com.openclaw.tunnel.plist -->
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key>
-  <string>com.openclaw.tunnel</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>/opt/homebrew/bin/autossh</string>
-    <string>-M</string><string>0</string>
-    <string>-N</string>
-    <string>-o</string><string>ServerAliveInterval=30</string>
-    <string>-o</string><string>ServerAliveCountMax=3</string>
-    <string>-L</string><string>18789:127.0.0.1:18789</string>
-    <string>root@REPLACE_SERVER_IP</string>
-  </array>
-  <key>RunAtLoad</key>
-  <true/>
-  <key>KeepAlive</key>
-  <true/>
-</dict>
-</plist>
-```
-
-```bash
-# Load it
-launchctl load ~/Library/LaunchAgents/com.openclaw.tunnel.plist
-```
-
-### Option C — Tailscale (zero-config VPN)
-
-```bash
-# On your Mac
-brew install tailscale && open -a Tailscale
-
-# On the server (one-time)
-curl -fsSL https://tailscale.com/install.sh | sh
-tailscale up --authkey <YOUR_TAILSCALE_AUTHKEY>
-```
-
-Once connected, replace `<serverIp>` everywhere with the Tailscale IP (stable even if public IP changes). Access the UI via the Tailscale IP directly: `http://<tailscale-ip>:18789` — no tunnel needed if you add port 18789 to UFW for the Tailscale subnet.
 
 ---
 
@@ -134,5 +100,5 @@ alias openclaw-sync-honey='rsync -av --delete \
 
 ```bash
 scp openclaw.json root@<serverIp>:/root/.openclaw/openclaw.json
-ssh root@<serverIp> "cd /root && docker compose restart"
+ssh root@<serverIp> "systemctl restart openclaw"
 ```
