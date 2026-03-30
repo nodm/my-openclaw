@@ -80,7 +80,7 @@ The `.env` file lives **only on the server** at `/root/.openclaw/.env`. It is `.
 
 | Key | What |
 |-----|------|
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Google AI API key (from GCP console) |
+| `GEMINI_API_KEY` | Google AI API key (from GCP console) |
 | `TELEGRAM_BOT_TOKEN` | From @BotFather |
 | `OPENCLAW_GATEWAY_TOKEN` | Random 32-byte hex (`openssl rand -hex 32`), auth for Control UI |
 | `YOUR_TG_ID` / `HONEY_TG_ID` | Telegram user IDs (find via @userinfobot) |

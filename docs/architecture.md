@@ -173,7 +173,7 @@ All secrets live exclusively in `/root/.openclaw/.env` on the server. Never comm
 
 | Key | What |
 |-----|------|
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Google AI API key (from GCP console) |
+| `GEMINI_API_KEY` | Google AI API key (from AI Studio or GCP console) |
 | `TELEGRAM_BOT_TOKEN` | From @BotFather |
 | `OPENCLAW_GATEWAY_TOKEN` | Random 32-byte hex, auth for Control UI |
 | `GOG_KEYRING_PASSWORD` | Random 32-byte hex, encrypts credential store (WhatsApp session etc.) |

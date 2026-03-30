@@ -87,11 +87,9 @@ df -h /root/.openclaw         # should show 10G volume mounted
 
 ## Step 4 — Google AI API key
 
-1. Go to [GCP console](https://console.cloud.google.com/) → APIs & Services → Library.
-2. Search "Generative Language API" → Enable it for your project.
-3. Go to APIs & Services → Credentials → Create Credentials → API Key.
-4. (Optional) Restrict the key to "Generative Language API" only.
-5. Verify: `curl "https://generativelanguage.googleapis.com/v1beta/models?key=YOUR_KEY"` — should return a model list.
+1. Go to [Google AI Studio](https://aistudio.google.com/apikey) or GCP console → APIs & Services → Credentials.
+2. Create an API key (linked to your GCP project for billing).
+3. Verify: `curl "https://generativelanguage.googleapis.com/v1beta/models?key=YOUR_KEY"` — should return a model list.
 
 ## Step 5 — Review openclaw.json
 
@@ -125,7 +123,7 @@ ssh root@<serverIp>
 
 # .env — fill in real values
 cp /dev/stdin /root/.openclaw/.env << 'EOF'
-GOOGLE_GENERATIVE_AI_API_KEY=REPLACE_ME
+GEMINI_API_KEY=REPLACE_ME
 TELEGRAM_BOT_TOKEN=REPLACE_ME
 OPENCLAW_GATEWAY_TOKEN=$(openssl rand -hex 32)
 GOG_KEYRING_PASSWORD=$(openssl rand -hex 32)
