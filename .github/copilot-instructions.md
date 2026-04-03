@@ -109,7 +109,6 @@ Common types: `feat`, `fix`, `docs`, `chore`, `refactor`.
 
 Provisioned via Pulumi (`infra/`, TypeScript/Node). Key facts:
 - Hetzner CPX22, region `hel1`
-- 10 GB Hetzner Volume mounted at `/root/.openclaw`
 - Firewall: inbound SSH (22) only; access via Tailscale Serve
 
 **Convenience alias** (add to `~/.zshrc` for faster syncing):

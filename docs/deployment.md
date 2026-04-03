@@ -18,7 +18,7 @@ infra/
   Pulumi.yaml          # Pulumi project (pnpm, nodejs runtime)
   package.json
   tsconfig.json
-  index.ts             # SshKey + Firewall + Volume + Server + VolumeAttachment
+  index.ts             # SshKey + Firewall + Server
   cloud-init.yaml      # OpenClaw (via official installer), Tailscale, UFW
 
 server/
@@ -62,26 +62,18 @@ pulumi up
 Note outputs:
 ```
 serverIp          = <IPv4>
-volumeLinuxDevice = /dev/disk/by-id/scsi-0HC_Volume_<id>
 ```
 
-## Step 3 — Verify server and mount volume
+## Step 3 — Verify server
 
 ```bash
 ssh root@<serverIp>
 openclaw --version            # should show installed version
 cat /root/bootstrap.log       # check for errors
-
-# Mount Hetzner volume (one-time — use volumeLinuxDevice from pulumi output)
-VOLUME_DEV=<volumeLinuxDevice>   # e.g. /dev/disk/by-id/scsi-0HC_Volume_12345678
-mount "$VOLUME_DEV" /root/.openclaw
-echo "$VOLUME_DEV /root/.openclaw ext4 defaults,nofail 0 2" >> /etc/fstab
+ls /root/.openclaw            # should exist (created by cloud-init)
 
 # Create directory structure
 mkdir -p /root/.openclaw/workspace /root/.openclaw/workspace-honey
-
-# Verify
-df -h /root/.openclaw         # should show 10G volume mounted
 ```
 
 ## Step 4 — Google AI API key

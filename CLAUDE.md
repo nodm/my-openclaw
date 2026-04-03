@@ -48,7 +48,7 @@ pulumi up          # provision/update
 pulumi stack output serverIp
 ```
 
-Hetzner CPX22, hel1, Ubuntu 24.04. 10 GB volume at `/root/.openclaw`. Firewall: SSH (22) only inbound.
+Hetzner CPX22, hel1, Ubuntu 24.04. Firewall: SSH (22) only inbound.
 
 ## Agent topology
 

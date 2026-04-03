@@ -27,7 +27,6 @@ How the system fits together — components, data flows, agent topology, and con
 │  ├── /root/.openclaw/workspace/       (you)              │
 │  └── /root/.openclaw/workspace-honey/ (honey)            │
 │                                                          │
-│  10 GB Hetzner Volume → /root/.openclaw                  │
 └──────────────────────┬──────────────────────────────────┘
                        │ outbound HTTPS
                        ▼
@@ -158,7 +157,6 @@ Provisioned by Pulumi (`infra/`):
 |----------|-------|
 | Server | Hetzner CPX22, hel1 |
 | OS | Ubuntu 24.04 |
-| Volume | 10 GB, mounted at `/root/.openclaw` |
 | Firewall | SSH (22) inbound only; all outbound allowed |
 | Bootstrap | `cloud-init.yaml` — installs OpenClaw (official installer), Tailscale |
 

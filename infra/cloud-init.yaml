@@ -1,7 +1,6 @@
 #cloud-config
 # Bootstrap script for OpenClaw on Hetzner CPX22 (Ubuntu 24.04)
 # Installs OpenClaw (via official installer), Tailscale, and UFW.
-# NOTE: Hetzner volume must be mounted manually after pulumi up — see deployment.md Step 3.
 
 package_update: true
 packages:
@@ -22,7 +21,7 @@ runcmd:
   - ufw allow 22/tcp comment 'SSH'
   - ufw --force enable
 
-  # Create mount point for Hetzner volume
+  # Create data directory
   - mkdir -p /root/.openclaw
 
   # Bootstrap log
@@ -30,4 +29,4 @@ runcmd:
   - echo "OpenClaw $(openclaw --version 2>/dev/null || echo 'installed')" >> /root/bootstrap.log
   - echo "Tailscale $(tailscale version)" >> /root/bootstrap.log
   - echo "UFW enabled — SSH (22) only" >> /root/bootstrap.log
-  - 'echo "NEXT: mount volume, run openclaw onboard --install-daemon (see deployment.md)" >> /root/bootstrap.log'
+  - 'echo "NEXT: run openclaw onboard --install-daemon (see deployment.md)" >> /root/bootstrap.log'
