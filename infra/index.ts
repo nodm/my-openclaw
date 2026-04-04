@@ -75,7 +75,7 @@ const setupServices = new command.remote.Command(
 	"setup-services",
 	{
 		connection,
-		create: pulumi.interpolate`chmod 600 /root/.openclaw/.env && tailscale up --authkey=${tailscaleAuthKey} --ssh --accept-dns && tailscale serve --bg 18789 && set -a && source /root/.openclaw/.env && set +a && OPENCLAW_NO_RESPAWN=1 openclaw daemon install && openclaw daemon start && sleep 15 && openclaw devices list >/dev/null 2>&1; openclaw devices approve --latest >/dev/null 2>&1 || true`,
+		create: pulumi.interpolate`chmod 600 /root/.openclaw/.env && tailscale up --authkey=${tailscaleAuthKey} --ssh --accept-dns && tailscale serve --bg 18789 && set -a && source /root/.openclaw/.env && set +a && OPENCLAW_NO_RESPAWN=1 openclaw daemon install && openclaw daemon start && sleep 15 && openclaw devices list >/dev/null 2>&1; openclaw devices approve --latest >/dev/null 2>&1 || true; DEVICE_ID=$(openclaw devices list --json 2>/dev/null | grep -o '"deviceId":"[^"]*"' | head -1 | cut -d'"' -f4); [ -n "$DEVICE_ID" ] && openclaw devices rotate --device "$DEVICE_ID" --role operator --scope operator.admin operator.read operator.write operator.approvals operator.pairing >/dev/null 2>&1 || true`,
 	},
 	{ dependsOn: uploadFiles },
 );
