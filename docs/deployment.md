@@ -81,8 +81,8 @@ This does everything in one command:
 4. Uploads `.env`, `openclaw.json`, `workspace/`, and `workspace-honey/` to the server
 5. Runs `tailscale up --authkey=...` (headless, no browser needed)
 6. Enables Tailscale Serve on port 18789
-7. Installs and starts the OpenClaw daemon
-8. Auto-approves the local gateway device (required for cron jobs to work)
+7. Installs and starts the OpenClaw daemon (with correct model env vars and `OPENCLAW_NO_RESPAWN=1`)
+8. Auto-approves the local gateway device and rotates its token with full operator scopes (required for cron jobs to work)
 
 Note the output:
 ```
@@ -108,16 +108,13 @@ ssh root@<serverIp> "openclaw logs --follow"
 ### Restart after config change
 
 ```bash
-ssh root@<serverIp>
-openclaw daemon restart       # for openclaw.json or .env changes
+ssh root@<serverIp> "openclaw daemon restart"   # for openclaw.json or .env changes
 ```
 
 ### Update OpenClaw version
 
 ```bash
-ssh root@<serverIp>
-curl -fsSL https://openclaw.ai/install.sh | bash
-openclaw daemon restart
+ssh root@<serverIp> "curl -fsSL https://openclaw.ai/install.sh | bash && openclaw daemon restart"
 ```
 
 ### Swap a model tier
@@ -125,9 +122,8 @@ openclaw daemon restart
 Edit `.env` on server, then restart:
 
 ```bash
-ssh root@<serverIp>
-# edit /root/.openclaw/.env
-openclaw daemon restart
+ssh root@<serverIp> "vi /root/.openclaw/.env"   # update MODEL_* value
+ssh root@<serverIp> "openclaw daemon restart"
 ```
 
 Also update the slugs in `workspace/skills/routing/SKILL.md` and re-rsync if you change `MODEL_MEDIUM` or `MODEL_REASONING`.

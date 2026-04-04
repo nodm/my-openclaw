@@ -172,11 +172,11 @@ All secrets live exclusively in `/root/.openclaw/.env` on the server. Never comm
 |-----|------|
 | `GEMINI_API_KEY` | Google AI API key (from AI Studio or GCP console) |
 | `TELEGRAM_BOT_TOKEN` | From @BotFather |
-| `OPENCLAW_GATEWAY_TOKEN` | Random 32-byte hex, auth for Control UI |
-| `GOG_KEYRING_PASSWORD` | Random 32-byte hex, encrypts credential store |
+| `OPENCLAW_GATEWAY_TOKEN` | Random 32-byte hex (`openssl rand -hex 32`), auth for Control UI |
+| `GOG_KEYRING_PASSWORD` | Random 32-byte hex (`openssl rand -hex 32`), encrypts credential store |
 | `YOUR_TG_ID` / `HONEY_TG_ID` | Telegram user IDs (find via @userinfobot) |
 | `DISCORD_BOT_TOKEN` | From Discord Developer Portal |
-| `YOUR_DISCORD_ID` | Discord user ID |
+| `YOUR_DISCORD_ID` / `DISCORD_SERVER_ID` | Discord user/server IDs (enable Developer Mode in Discord to copy) |
 | `MODEL_*` | Model slugs (not secret, but env-injected for easy swapping) |
 
 Template: `server/.env.example`.

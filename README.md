@@ -1,6 +1,6 @@
 # my-open-claw
 
-Personal OpenClaw deployment — Hetzner CPX22 (hel1), Vercel AI Gateway, Telegram.
+Personal OpenClaw deployment — Hetzner CPX22 (hel1), Google AI (Gemini), Telegram + Discord.
 
 ## Docs
 
@@ -8,7 +8,7 @@ Personal OpenClaw deployment — Hetzner CPX22 (hel1), Vercel AI Gateway, Telegr
 |---|---|
 | [Architecture](docs/architecture.md) | Components, agent topology, channel routing, config structure |
 | [Deployment](docs/deployment.md) | Provision infra, configure gateway, launch stack |
-| [Access & Sync](docs/access-and-sync.md) | SSH tunnel, autossh, Tailscale, rsync workspace |
+| [Access & Sync](docs/access-and-sync.md) | Tailscale Serve, SSH tunnel fallback, rsync workspace |
 
 ## Quick reference
 

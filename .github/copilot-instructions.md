@@ -8,7 +8,7 @@ This repository is a **personal OpenClaw deployment configuration** — not a so
 - `workspace/` — **Source of truth** for agent runtime files. Synced one-way to the server via rsync. Never contains secrets.
 - `server/.env.example` — Template for the server-side `.env` (copy to `.env` at repo root before `pulumi up`). Never commit the real `.env`.
 - `openclaw.json` — Gateway config (agents, channels, bindings). Uploaded to server automatically by `pulumi up`, or manually via `scp`.
-- `infra/` — Pulumi IaC (TypeScript/Node). Provisions Hetzner server, volume, and firewall.
+- `infra/` — Pulumi IaC (TypeScript/Node). Provisions Hetzner server and firewall.
 
 ## Deployment workflows
 
@@ -16,6 +16,9 @@ This repository is a **personal OpenClaw deployment configuration** — not a so
 ```bash
 # One-time Pulumi secrets setup
 cd infra
+pnpm install
+pulumi login --local          # or 'pulumi login' for Pulumi Cloud
+pulumi stack init prod        # first time only; use 'pulumi stack select prod' if exists
 pulumi config set hcloud:token $HCLOUD_TOKEN --secret
 pulumi config set sshPublicKey "$(cat ~/.ssh/id_ed25519.pub)"
 pulumi config set tailscaleAuthKey "tskey-auth-..." --secret
@@ -96,8 +99,8 @@ The `.env` file lives **only on the server** at `/root/.openclaw/.env`. It is `.
 | `GEMINI_API_KEY` | Google AI API key (from GCP console) |
 | `TELEGRAM_BOT_TOKEN` | From @BotFather |
 | `OPENCLAW_GATEWAY_TOKEN` | Random 32-byte hex (`openssl rand -hex 32`), auth for Control UI |
+| `GOG_KEYRING_PASSWORD` | Random 32-byte hex (`openssl rand -hex 32`), encrypts credential store |
 | `YOUR_TG_ID` / `HONEY_TG_ID` | Telegram user IDs (find via @userinfobot) |
-| `YOUR_WHATSAPP_NUMBER` / `HONEY_WHATSAPP_NUMBER` | E.164 phone numbers |
 | `DISCORD_BOT_TOKEN` | Discord bot token from Developer Portal |
 | `YOUR_DISCORD_ID` / `DISCORD_SERVER_ID` | Discord user/server IDs (enable Developer Mode to copy) |
 | `MODEL_*` | Model slugs — not secret, but env-injected for easy swapping |
