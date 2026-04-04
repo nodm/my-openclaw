@@ -75,7 +75,7 @@ const setupServices = new command.remote.Command(
 	"setup-services",
 	{
 		connection,
-		create: pulumi.interpolate`chmod 600 /root/.openclaw/.env && tailscale up --authkey=${tailscaleAuthKey} --ssh --accept-dns && tailscale serve --bg 18789 && openclaw daemon install && openclaw daemon start`,
+		create: pulumi.interpolate`chmod 600 /root/.openclaw/.env && tailscale up --authkey=${tailscaleAuthKey} --ssh --accept-dns && tailscale serve --bg 18789 && set -a && source /root/.openclaw/.env && set +a && OPENCLAW_NO_RESPAWN=1 openclaw daemon install && openclaw daemon start`,
 	},
 	{ dependsOn: uploadFiles },
 );
