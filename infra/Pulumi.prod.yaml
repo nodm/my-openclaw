@@ -3,3 +3,5 @@ config:
   hcloud:token:
     secure: v1:gNO51B2U0SFmAYOU:u2Iz5DeNVNJVB/p7Wls8dIllhSWCJN74fLwjKC43UIS9vJCHREZ3C1Xsc26lFtemek1IU5xNP08Q9BaD1scDLxATiqYw53thyYwS0QwDfvc=
   openclaw-infra:sshPublicKey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP1ptuAdcgoVRw7nI0pgImgrl0nhG1GkpFJxJTOYaLST openclaw-hetzner"
+  openclaw-infra:tailscaleAuthKey:
+    secure: v1:93hjY3vkMXRp2OQn:RTlON4UEWRQuIprCpL/1GM2DLK+CCzu6F9RdFt/74Lq/UM9z/eJ2fAuBI4K6uTwzdOT3urCmgDZZlTwFYSwzJ9NuecTgKsgZvuTe31nM

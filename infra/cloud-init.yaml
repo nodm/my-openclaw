@@ -9,8 +9,8 @@ packages:
   - ufw
 
 runcmd:
-  # Install OpenClaw (installs Node if needed, sets up daemon)
-  - curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard
+  # Install OpenClaw (HOME must be exported — cloud-init runcmd does not set it)
+  - "export HOME=/root && curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard"
 
   # Install Tailscale
   - curl -fsSL https://tailscale.com/install.sh | sh
@@ -21,12 +21,11 @@ runcmd:
   - ufw allow 22/tcp comment 'SSH'
   - ufw --force enable
 
-  # Create data directory
-  - mkdir -p /root/.openclaw
+  # Create data directories
+  - mkdir -p /root/.openclaw/workspace /root/.openclaw/workspace-honey
 
   # Bootstrap log
   - echo "Bootstrapped at $(date --utc)" > /root/bootstrap.log
   - echo "OpenClaw $(openclaw --version 2>/dev/null || echo 'installed')" >> /root/bootstrap.log
   - echo "Tailscale $(tailscale version)" >> /root/bootstrap.log
   - echo "UFW enabled — SSH (22) only" >> /root/bootstrap.log
-  - 'echo "NEXT: run openclaw onboard --install-daemon (see deployment.md)" >> /root/bootstrap.log'
