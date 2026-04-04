@@ -82,6 +82,7 @@ This does everything in one command:
 5. Runs `tailscale up --authkey=...` (headless, no browser needed)
 6. Enables Tailscale Serve on port 18789
 7. Installs and starts the OpenClaw daemon
+8. Auto-approves the local gateway device (required for cron jobs to work)
 
 Note the output:
 ```

@@ -1,9 +1,9 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import * as command from "@pulumi/command";
 import * as hcloud from "@pulumi/hcloud";
 import * as pulumi from "@pulumi/pulumi";
-import * as command from "@pulumi/command";
 
 const config = new pulumi.Config();
 const sshPublicKey = config.require("sshPublicKey");
