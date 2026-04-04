@@ -12,17 +12,7 @@ The gateway binds to `127.0.0.1:18789` on the server (loopback only, never expos
 
 Tailscale Serve proxies `https://<hostname>.<tailnet>/` → `http://127.0.0.1:18789` with auto-TLS. Only devices on your tailnet can reach it.
 
-**Server setup (one-time):**
-
-```bash
-ssh root@<serverIp>
-
-# Join your tailnet (follow the auth URL)
-tailscale up
-
-# Expose gateway via Tailscale Serve
-tailscale serve --bg 18789
-```
+`tailscale up` and `tailscale serve --bg 18789` are run automatically by `pulumi up` during provisioning. No manual server setup needed.
 
 **Access from any tailnet device:**
 

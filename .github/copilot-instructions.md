@@ -6,13 +6,26 @@ This repository is a **personal OpenClaw deployment configuration** — not a so
 
 - `docs/` — Architecture, deployment, and access/sync guides. Read these before making changes.
 - `workspace/` — **Source of truth** for agent runtime files. Synced one-way to the server via rsync. Never contains secrets.
-- `server/.env.example` — Template for the server-side `.env` (never commit the real `.env`). Systemd service is created by `openclaw onboard --install-daemon`.
-- `openclaw.json` — Gateway config (agents, channels, bindings). Deployed manually via `scp` then `systemctl restart openclaw`.
+- `server/.env.example` — Template for the server-side `.env` (copy to `.env` at repo root before `pulumi up`). Never commit the real `.env`.
+- `openclaw.json` — Gateway config (agents, channels, bindings). Uploaded to server automatically by `pulumi up`, or manually via `scp`.
 - `infra/` — Pulumi IaC (TypeScript/Node). Provisions Hetzner server, volume, and firewall.
 
 ## Deployment workflows
 
-**Sync workspace to server** (the most common operation):
+**Full provision from scratch** (`pulumi up` does everything automatically):
+```bash
+# One-time Pulumi secrets setup
+cd infra
+pulumi config set hcloud:token $HCLOUD_TOKEN --secret
+pulumi config set sshPublicKey "$(cat ~/.ssh/id_ed25519.pub)"
+pulumi config set tailscaleAuthKey "tskey-auth-..." --secret
+# Fill .env at repo root, then:
+pulumi up
+```
+
+`pulumi up` provisions the server, installs OpenClaw + Tailscale, uploads `.env` / `openclaw.json` / workspaces, and starts the daemon — no manual SSH steps needed.
+
+**Sync workspace to server** (the most common day-to-day operation):
 ```bash
 rsync -av --delete \
   --exclude '.env' --exclude 'sessions/' \
@@ -22,7 +35,7 @@ rsync -av --delete \
 **Push gateway config and restart:**
 ```bash
 scp openclaw.json root@<serverIp>:/root/.openclaw/openclaw.json
-ssh root@<serverIp> "systemctl restart openclaw"
+ssh root@<serverIp> "openclaw daemon restart"
 ```
 
 **Open the Control UI** (via Tailscale — no tunnel needed):
@@ -32,8 +45,8 @@ https://<hostname>.<tailnet>/
 
 **View logs / restart:**
 ```bash
-ssh root@<serverIp> "journalctl -u openclaw -f -n 100"
-ssh root@<serverIp> "systemctl restart openclaw"
+ssh root@<serverIp> "openclaw logs --follow"
+ssh root@<serverIp> "openclaw daemon restart"
 ```
 
 ## Architecture overview

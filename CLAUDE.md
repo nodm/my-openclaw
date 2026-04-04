@@ -11,14 +11,17 @@ Personal OpenClaw deployment config — not a source code project. Manages deplo
 - `openclaw.json` — Gateway config (agents, channels, bindings). Uses JSON5 with `${ENV_VAR}` interpolation from server `.env`.
 - `workspace/` — Source of truth for `main` + `cron` agent runtime files. Synced one-way to server via rsync.
 - `workspace-honey/` — Source of truth for `honey` agent. Same structure, synced separately.
-- `server/.env.example` — Template for server-side `.env` (never committed). Gateway service installed via `openclaw daemon install`.
-- `infra/` — Pulumi IaC (TypeScript). Provisions Hetzner CPX22, volume, firewall.
+- `server/.env.example` — Template for server-side `.env` (never committed). Copy to `.env` at repo root before `pulumi up`.
+- `infra/` — Pulumi IaC (TypeScript). Provisions Hetzner CPX22, firewall, and fully configures the server automatically.
 - `docs/` — Architecture, deployment, access/sync guides.
 
 ## Common operations
 
 ```bash
-# Sync your workspace to server
+# Full provision from scratch (pulumi up handles everything)
+cd infra && pulumi up
+
+# Sync your workspace to server (day-to-day)
 rsync -av --delete --exclude '.env' --exclude 'sessions/' \
   workspace/ root@<serverIp>:/root/.openclaw/workspace/
 
@@ -44,7 +47,13 @@ ssh root@<serverIp> "openclaw logs --follow"
 
 ```bash
 cd infra && pnpm install
-pulumi up          # provision/update
+# Required secrets (one-time)
+pulumi config set hcloud:token $HCLOUD_TOKEN --secret
+pulumi config set sshPublicKey "$(cat ~/.ssh/id_ed25519.pub)"
+pulumi config set tailscaleAuthKey "tskey-auth-..." --secret
+# Copy and fill .env at repo root before running
+cp server/.env.example .env
+pulumi up          # provisions server + uploads files + starts daemon
 pulumi stack output serverIp
 ```
 
