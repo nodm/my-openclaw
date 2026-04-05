@@ -83,25 +83,66 @@ ssh root@$SERVER "openclaw cron status"
 
 ### Preventing future crashes
 
-The `openclaw daemon install` command creates a systemd service, but by default it may not have `Restart=on-failure`. To ensure auto-recovery:
+The `openclaw daemon install` command creates a user-level systemd service at `~/.config/systemd/user/openclaw-gateway.service` with `Restart=always`. To verify:
 
 ```bash
-# Check the current service file
-ssh root@$SERVER "cat /etc/systemd/system/openclaw-gateway.service 2>/dev/null || systemctl cat openclaw-gateway 2>/dev/null"
-
-# If the service file exists, add restart policy:
-ssh root@$SERVER "mkdir -p /etc/systemd/system/openclaw-gateway.service.d && cat > /etc/systemd/system/openclaw-gateway.service.d/restart.conf << 'EOF'
-[Service]
-Restart=on-failure
-RestartSec=5
-EOF
-systemctl daemon-reload"
+ssh root@$SERVER "export XDG_RUNTIME_DIR=/run/user/0 && systemctl --user show openclaw-gateway --property=Restart,RestartSec"
 ```
 
 If the service unit doesn't exist at all, re-register it:
 
 ```bash
 ssh root@$SERVER "set -a && source /root/.openclaw/.env && set +a && OPENCLAW_NO_RESPAWN=1 openclaw daemon install && openclaw daemon start"
+```
+
+> **Critical: always pass `OPENCLAW_NO_RESPAWN=1`** when running `openclaw daemon install`. See [Dual-respawn crash loop](#dual-respawn-crash-loop) below.
+
+---
+
+## Dual-respawn crash loop
+
+### Symptoms
+
+- Gateway process restarts every 10–30 seconds.
+- Logs show repeated `signal SIGTERM received` / `received SIGTERM; shutting down` entries with rapidly incrementing PIDs.
+- Discord errors like `You are being rate limited` (429) from command registration on every restart.
+- Bot appears online briefly, then drops.
+
+### Why it happens
+
+OpenClaw has a **built-in process respawner** that automatically restarts the gateway when it dies. Systemd's `Restart=always` does the same thing. When both are active, they race: each detects the other's instance, sends SIGTERM to kill it, and spawns its own — creating an infinite restart loop.
+
+The env var `OPENCLAW_NO_RESPAWN=1` disables OpenClaw's internal respawner, letting systemd handle restarts exclusively. The Pulumi provisioning script passes this correctly during initial setup. But if you later run `openclaw daemon install --force` **without** the env var set, the regenerated service file drops `OPENCLAW_NO_RESPAWN=1`, reactivating the built-in respawner.
+
+### How to diagnose
+
+```bash
+# Check if the service file has OPENCLAW_NO_RESPAWN
+ssh root@$SERVER "grep OPENCLAW_NO_RESPAWN ~/.config/systemd/user/openclaw-gateway.service"
+
+# Count SIGTERM events in today's log (more than 2–3 = crash loop)
+ssh root@$SERVER "grep -c 'signal SIGTERM' /tmp/openclaw/openclaw-$(date +%Y-%m-%d).log"
+
+# Count distinct PIDs spawned today
+ssh root@$SERVER "grep DEP0040 /tmp/openclaw/openclaw-$(date +%Y-%m-%d).log | grep -o '(node:[0-9]*)' | sort -u | wc -l"
+```
+
+### How to fix
+
+```bash
+# Add the missing env var to the service file
+ssh root@$SERVER "sed -i '/\[Service\]/a Environment=OPENCLAW_NO_RESPAWN=1' ~/.config/systemd/user/openclaw-gateway.service"
+
+# Reload and restart
+ssh root@$SERVER "export XDG_RUNTIME_DIR=/run/user/0 && systemctl --user daemon-reload && openclaw daemon restart"
+```
+
+### Preventing recurrence
+
+Always reinstall with the env var set:
+
+```bash
+ssh root@$SERVER "set -a && source /root/.openclaw/.env && set +a && OPENCLAW_NO_RESPAWN=1 openclaw daemon install --force && openclaw daemon restart"
 ```
 
 ---
