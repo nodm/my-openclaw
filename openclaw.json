@@ -67,6 +67,12 @@
     tts: {
       auto: "off",
       provider: "microsoft",
+      providers: {
+        microsoft: {
+          enabled: true,
+          outputFormat: "ogg-24khz-16bit-mono-opus",
+        },
+      },
     },
   },
 
