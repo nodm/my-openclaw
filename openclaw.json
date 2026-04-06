@@ -63,6 +63,14 @@
     },
   ],
 
+  plugins: {
+    entries: {
+      microsoft: {
+        enabled: true,
+      },
+    },
+  },
+
   messages: {
     tts: {
       auto: "off",
