@@ -63,6 +63,13 @@
     },
   ],
 
+  messages: {
+    tts: {
+      auto: "off",
+      provider: "microsoft",
+    },
+  },
+
   commands: {
     native: "auto",
     nativeSkills: "auto",
