@@ -81,7 +81,7 @@ This does everything in one command:
 4. Uploads `.env`, `openclaw.json`, `workspace/`, and `workspace-honey/` to the server
 5. Runs `tailscale up --authkey=...` (headless, no browser needed)
 6. Enables Tailscale Serve on port 18789
-7. Installs and starts the OpenClaw daemon (with correct model env vars and `OPENCLAW_NO_RESPAWN=1`)
+7. Installs and starts the OpenClaw daemon with a hardened user systemd unit (env loaded from `/root/.openclaw/.env`, plus `OPENCLAW_NO_RESPAWN=1`)
 8. Auto-approves the local gateway device and rotates its token with full operator scopes (required for cron jobs to work)
 
 Note the output:

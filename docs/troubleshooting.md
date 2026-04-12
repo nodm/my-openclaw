@@ -83,7 +83,7 @@ ssh root@$SERVER "openclaw cron status"
 
 ### Preventing future crashes
 
-The `openclaw daemon install` command creates a user-level systemd service at `~/.config/systemd/user/openclaw-gateway.service` with `Restart=always`. To verify:
+The `openclaw gateway install` command creates a user-level systemd service at `~/.config/systemd/user/openclaw-gateway.service` with `Restart=always`. To verify:
 
 ```bash
 ssh root@$SERVER "export XDG_RUNTIME_DIR=/run/user/0 && systemctl --user show openclaw-gateway --property=Restart,RestartSec"
@@ -92,10 +92,10 @@ ssh root@$SERVER "export XDG_RUNTIME_DIR=/run/user/0 && systemctl --user show op
 If the service unit doesn't exist at all, re-register it:
 
 ```bash
-ssh root@$SERVER "set -a && source /root/.openclaw/.env && set +a && OPENCLAW_NO_RESPAWN=1 openclaw daemon install && openclaw daemon start"
+ssh root@$SERVER "set -a && source /root/.openclaw/.env && set +a && OPENCLAW_NO_RESPAWN=1 openclaw gateway install --force && export XDG_RUNTIME_DIR=/run/user/0 && systemctl --user daemon-reload && systemctl --user restart openclaw-gateway"
 ```
 
-> **Critical: always pass `OPENCLAW_NO_RESPAWN=1`** when running `openclaw daemon install`. See [Dual-respawn crash loop](#dual-respawn-crash-loop) below.
+> **Critical: always pass `OPENCLAW_NO_RESPAWN=1`** when running `openclaw gateway install`. See [Dual-respawn crash loop](#dual-respawn-crash-loop) below.
 
 ---
 
@@ -112,7 +112,7 @@ ssh root@$SERVER "set -a && source /root/.openclaw/.env && set +a && OPENCLAW_NO
 
 OpenClaw has a **built-in process respawner** that automatically restarts the gateway when it dies. Systemd's `Restart=always` does the same thing. When both are active, they race: each detects the other's instance, sends SIGTERM to kill it, and spawns its own — creating an infinite restart loop.
 
-The env var `OPENCLAW_NO_RESPAWN=1` disables OpenClaw's internal respawner, letting systemd handle restarts exclusively. The Pulumi provisioning script passes this correctly during initial setup. But if you later run `openclaw daemon install --force` **without** the env var set, the regenerated service file drops `OPENCLAW_NO_RESPAWN=1`, reactivating the built-in respawner.
+The env var `OPENCLAW_NO_RESPAWN=1` disables OpenClaw's internal respawner, letting systemd handle restarts exclusively. The Pulumi provisioning script passes this correctly during initial setup. But if you later run `openclaw gateway install --force` **without** the env var set, the regenerated service file drops `OPENCLAW_NO_RESPAWN=1`, reactivating the built-in respawner.
 
 ### How to diagnose
 
@@ -142,7 +142,62 @@ ssh root@$SERVER "export XDG_RUNTIME_DIR=/run/user/0 && systemctl --user daemon-
 Always reinstall with the env var set:
 
 ```bash
-ssh root@$SERVER "set -a && source /root/.openclaw/.env && set +a && OPENCLAW_NO_RESPAWN=1 openclaw daemon install --force && openclaw daemon restart"
+ssh root@$SERVER "set -a && source /root/.openclaw/.env && set +a && OPENCLAW_NO_RESPAWN=1 openclaw gateway install --force && export XDG_RUNTIME_DIR=/run/user/0 && systemctl --user daemon-reload && systemctl --user restart openclaw-gateway"
+```
+
+---
+
+## Service unit embeds secrets
+
+### Symptoms
+
+- `openclaw doctor` reports: `Gateway service embeds OPENCLAW_GATEWAY_TOKEN and should be reinstalled`.
+- `~/.config/systemd/user/openclaw-gateway.service` contains many `Environment=` lines with API keys/tokens.
+
+### Why it happens
+
+Some OpenClaw install/repair flows generate a user systemd unit with inlined env vars. That bakes secrets into the unit file and can leave the daemon in a "non-standard" config state.
+
+### How to fix
+
+```bash
+# Rewrite the service to use EnvironmentFile instead of inlined secrets
+ssh root@$SERVER "cat > /root/.config/systemd/user/openclaw-gateway.service <<'EOF'
+[Unit]
+Description=OpenClaw Gateway (hardened)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=-/root/.openclaw/.env
+Environment=OPENCLAW_NO_RESPAWN=1
+Environment=OPENCLAW_GATEWAY_BIND=loopback
+Environment=OPENCLAW_GATEWAY_PORT=18789
+Environment=HOME=/root
+Environment=TMPDIR=/tmp
+Environment=PATH=/usr/bin:/root/.local/bin:/root/.npm-global/bin:/root/bin:/root/.volta/bin:/root/.asdf/shims:/root/.bun/bin:/root/.nvm/current/bin:/root/.fnm/current/bin:/root/.local/share/pnpm:/usr/local/bin:/bin
+ExecStart=/usr/bin/node /usr/lib/node_modules/openclaw/dist/index.js gateway --port 18789
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+TimeoutStartSec=30
+SuccessExitStatus=0 143
+KillMode=control-group
+
+[Install]
+WantedBy=default.target
+EOF
+export XDG_RUNTIME_DIR=/run/user/0
+systemctl --user daemon-reload
+systemctl --user restart openclaw-gateway
+openclaw daemon status"
+```
+
+### Verify
+
+```bash
+ssh root@$SERVER "grep OPENCLAW_GATEWAY_TOKEN /root/.config/systemd/user/openclaw-gateway.service || echo 'token not embedded'"
+ssh root@$SERVER "openclaw doctor"
 ```
 
 ---
@@ -305,7 +360,7 @@ openclaw doctor --fix               # Auto-fix + update
 # Daemon
 openclaw daemon start               # Start the gateway process
 openclaw daemon restart             # Restart (required after .env changes)
-openclaw daemon install             # Register systemd service
+openclaw gateway install --force    # Register/refresh systemd service
 
 # Cron
 openclaw cron list                  # List all jobs
