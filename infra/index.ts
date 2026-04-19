@@ -75,32 +75,41 @@ const setupServices = new command.remote.Command(
 	"setup-services",
 	{
 		connection,
-		create: pulumi.interpolate`chmod 600 /root/.openclaw/.env && tailscale up --authkey=${tailscaleAuthKey} --ssh --accept-dns && tailscale serve --bg 18789 && set -a && source /root/.openclaw/.env && set +a && OPENCLAW_NO_RESPAWN=1 openclaw gateway install --force && cat > /root/.config/systemd/user/openclaw-gateway.service <<'EOF'
-[Unit]
-Description=OpenClaw Gateway (hardened)
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-EnvironmentFile=-/root/.openclaw/.env
-Environment=OPENCLAW_NO_RESPAWN=1
-Environment=OPENCLAW_GATEWAY_BIND=loopback
-Environment=OPENCLAW_GATEWAY_PORT=18789
-Environment=HOME=/root
-Environment=TMPDIR=/tmp
-Environment=PATH=/usr/bin:/root/.local/bin:/root/.npm-global/bin:/root/bin:/root/.volta/bin:/root/.asdf/shims:/root/.bun/bin:/root/.nvm/current/bin:/root/.fnm/current/bin:/root/.local/share/pnpm:/usr/local/bin:/bin
-ExecStart=/usr/bin/node /usr/lib/node_modules/openclaw/dist/index.js gateway --port 18789
-Restart=always
-RestartSec=5
-TimeoutStopSec=30
-TimeoutStartSec=30
-SuccessExitStatus=0 143
-KillMode=control-group
-
-[Install]
-WantedBy=default.target
-EOF
-&& export XDG_RUNTIME_DIR=/run/user/0 && systemctl --user daemon-reload && systemctl --user restart openclaw-gateway && sleep 15 && openclaw devices list >/dev/null 2>&1; openclaw devices approve --latest >/dev/null 2>&1 || true; DEVICE_ID=$(openclaw devices list --json 2>/dev/null | grep -o '"deviceId":"[^"]*"' | head -1 | cut -d'"' -f4); [ -n "$DEVICE_ID" ] && openclaw devices rotate --device "$DEVICE_ID" --role operator --scope operator.admin operator.read operator.write operator.approvals operator.pairing >/dev/null 2>&1 || true`,
+		create: pulumi.interpolate`chmod 600 /root/.openclaw/.env \
+&& tailscale up --authkey=${tailscaleAuthKey} --ssh --accept-dns \
+&& tailscale serve --bg 18789 \
+&& set -a && source /root/.openclaw/.env && set +a \
+&& OPENCLAW_NO_RESPAWN=1 openclaw gateway install --force \
+&& printf '%s\n' \
+  '[Unit]' \
+  'Description=OpenClaw Gateway (hardened)' \
+  'After=network-online.target' \
+  'Wants=network-online.target' \
+  '' \
+  '[Service]' \
+  'EnvironmentFile=-/root/.openclaw/.env' \
+  'Environment=OPENCLAW_NO_RESPAWN=1' \
+  'Environment=OPENCLAW_GATEWAY_BIND=loopback' \
+  'Environment=OPENCLAW_GATEWAY_PORT=18789' \
+  'Environment=HOME=/root' \
+  'Environment=TMPDIR=/tmp' \
+  'Environment=PATH=/usr/bin:/root/.local/bin:/root/.npm-global/bin:/root/bin:/root/.volta/bin:/root/.asdf/shims:/root/.bun/bin:/root/.nvm/current/bin:/root/.fnm/current/bin:/root/.local/share/pnpm:/usr/local/bin:/bin' \
+  'ExecStart=/usr/bin/node /usr/lib/node_modules/openclaw/dist/index.js gateway --port 18789' \
+  'Restart=always' \
+  'RestartSec=5' \
+  'TimeoutStopSec=30' \
+  'TimeoutStartSec=30' \
+  'SuccessExitStatus=0 143' \
+  'KillMode=control-group' \
+  '' \
+  '[Install]' \
+  'WantedBy=default.target' \
+  > /root/.config/systemd/user/openclaw-gateway.service \
+&& export XDG_RUNTIME_DIR=/run/user/0 \
+&& systemctl --user daemon-reload \
+&& systemctl --user restart openclaw-gateway \
+&& sleep 60 \
+&& openclaw devices list >/dev/null 2>&1; openclaw devices approve --latest >/dev/null 2>&1 || true; DEVICE_ID=$(openclaw devices list --json 2>/dev/null | grep -o '"deviceId":"[^"]*"' | head -1 | cut -d'"' -f4); [ -n "$DEVICE_ID" ] && openclaw devices rotate --device "$DEVICE_ID" --role operator --scope operator.admin operator.read operator.write operator.approvals operator.pairing >/dev/null 2>&1 || true`,
 	},
 	{ dependsOn: uploadFiles },
 );
