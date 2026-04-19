@@ -105,6 +105,7 @@ const setupServices = new command.remote.Command(
   '[Install]' \
   'WantedBy=default.target' \
   > /root/.config/systemd/user/openclaw-gateway.service \
+&& loginctl enable-linger root \
 && export XDG_RUNTIME_DIR=/run/user/0 \
 && systemctl --user daemon-reload \
 && systemctl --user restart openclaw-gateway \
