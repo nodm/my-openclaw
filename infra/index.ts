@@ -32,9 +32,9 @@ const firewall = new hcloud.Firewall("openclaw", {
 	],
 });
 
-// Server — CPX22, Ubuntu 24.04, hel1
+// Server — CX23, Ubuntu 24.04, hel1
 const server = new hcloud.Server("openclaw", {
-	serverType: "cpx22",
+	serverType: "cx23",
 	image: "ubuntu-24.04",
 	location: "hel1",
 	sshKeys: [sshKey.id],

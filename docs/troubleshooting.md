@@ -47,7 +47,7 @@ If step 3 shows `nextWakeAtMs` in the past but no run happened, the scheduler st
 The gateway is a single Node.js process (`openclaw-gateway`). It can crash from:
 
 - **Unhandled API errors** — a transient Gemini API failure during a cron job or user message that isn't caught internally.
-- **Out of memory** — CPX22 has 4 GB RAM. A runaway session with very large context can exhaust it. Check with `dmesg | grep -i oom`.
+- **Out of memory** — CX23 has 4 GB RAM. A runaway session with very large context can exhaust it. Check with `dmesg | grep -i oom`.
 - **Disk full** — session logs and SQLite WAL files grow over time. Check with `df -h`.
 - **OpenClaw bug** — new versions installed via `openclaw doctor --fix` can introduce regressions.
 

@@ -54,7 +54,7 @@ ssh root@<serverIp> "openclaw daemon restart"
 
 ## Architecture overview
 
-Three agents run as a systemd-managed Node.js process on a Hetzner CPX22 (Ubuntu 24.04, hel1):
+Three agents run as a systemd-managed Node.js process on a Hetzner CX23 (Ubuntu 24.04, hel1):
 
 | Agent id | Who | Workspace | Model |
 |----------|-----|-----------|-------|
@@ -124,7 +124,7 @@ Common types: `feat`, `fix`, `docs`, `chore`, `refactor`.
 ## Infrastructure
 
 Provisioned via Pulumi (`infra/`, TypeScript/Node). Key facts:
-- Hetzner CPX22, region `hel1`
+- Hetzner CX23, region `hel1`
 - Firewall: inbound SSH (22) only; access via Tailscale Serve
 
 **Convenience alias** (add to `~/.zshrc` for faster syncing):

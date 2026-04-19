@@ -17,7 +17,7 @@ How the system fits together — components, data flows, agent topology, and con
            │ SSH / Tailscale
            ▼
 ┌─────────────────────────────────────────────────────────┐
-│  Hetzner CPX22 — hel1  (root@<serverIp>)                 │
+│  Hetzner CX23 — hel1  (root@<serverIp>)                 │
 │                                                          │
 │  systemd service: openclaw-gateway                      │
 │  ├── gateway  →  127.0.0.1:18789 (loopback)             │
@@ -155,7 +155,7 @@ Provisioned by Pulumi (`infra/`):
 
 | Resource | Value |
 |----------|-------|
-| Server | Hetzner CPX22, hel1 |
+| Server | Hetzner CX23, hel1 |
 | OS | Ubuntu 24.04 |
 | Firewall | SSH (22) inbound only; all outbound allowed |
 | Bootstrap | `cloud-init.yaml` — installs OpenClaw (official installer), Tailscale |

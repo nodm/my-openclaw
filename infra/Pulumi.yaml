@@ -3,4 +3,4 @@ runtime:
   name: nodejs
   options:
     packagemanager: pnpm
-description: OpenClaw on Hetzner CPX22 — SSH key, firewall, volume, server
+description: OpenClaw on Hetzner CX23 — SSH key, firewall, volume, server

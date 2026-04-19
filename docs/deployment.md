@@ -1,6 +1,6 @@
 # Deployment Guide
 
-OpenClaw on Hetzner CPX22 (hel1) with Google AI (Gemini) and tiered model routing.
+OpenClaw on Hetzner CX23 (hel1) with Google AI (Gemini) and tiered model routing.
 
 ## Model tier reference
 
@@ -75,7 +75,7 @@ pulumi up
 ```
 
 This does everything in one command:
-1. Creates Hetzner SSH key, firewall, and CPX22 server
+1. Creates Hetzner SSH key, firewall, and CX23 server
 2. cloud-init installs OpenClaw, Tailscale, and UFW
 3. Waits for cloud-init to complete
 4. Uploads `.env`, `openclaw.json`, `workspace/`, and `workspace-honey/` to the server

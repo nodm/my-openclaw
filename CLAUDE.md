@@ -12,7 +12,7 @@ Personal OpenClaw deployment config — not a source code project. Manages deplo
 - `workspace/` — Source of truth for `main` + `cron` agent runtime files. Synced one-way to server via rsync.
 - `workspace-honey/` — Source of truth for `honey` agent. Same structure, synced separately.
 - `server/.env.example` — Template for server-side `.env` (never committed). Copy to `.env` at repo root before `pulumi up`.
-- `infra/` — Pulumi IaC (TypeScript). Provisions Hetzner CPX22, firewall, and fully configures the server automatically.
+- `infra/` — Pulumi IaC (TypeScript). Provisions Hetzner CX23, firewall, and fully configures the server automatically.
 - `docs/` — Architecture, deployment, access/sync guides.
 
 ## Common operations
@@ -57,7 +57,7 @@ pulumi up          # provisions server + uploads files + starts daemon
 pulumi stack output serverIp
 ```
 
-Hetzner CPX22, hel1, Ubuntu 24.04. Firewall: SSH (22) only inbound.
+Hetzner CX23, hel1, Ubuntu 24.04. Firewall: SSH (22) only inbound.
 
 ## Agent topology
 

@@ -1,6 +1,6 @@
 # my-open-claw
 
-Personal OpenClaw deployment — Hetzner CPX22 (hel1), Google AI (Gemini), Telegram + Discord.
+Personal OpenClaw deployment — Hetzner CX23 (hel1), Google AI (Gemini), Telegram + Discord.
 
 ## Docs
 

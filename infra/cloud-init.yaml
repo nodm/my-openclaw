@@ -1,5 +1,5 @@
 #cloud-config
-# Bootstrap script for OpenClaw on Hetzner CPX22 (Ubuntu 24.04)
+# Bootstrap script for OpenClaw on Hetzner CX23 (Ubuntu 24.04)
 # Installs OpenClaw (via official installer), Tailscale, and UFW.
 
 package_update: true
