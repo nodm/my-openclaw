@@ -68,6 +68,9 @@
       microsoft: {
         enabled: true,
       },
+      google: {
+        enabled: true,
+      },
     },
   },
 
@@ -98,7 +101,7 @@
       allowFrom: ["${YOUR_TG_ID}", "${HONEY_TG_ID}"],
       botToken: "${TELEGRAM_BOT_TOKEN}",
       groupPolicy: "allowlist",
-      streaming: "partial",
+      streaming: { mode: "partial" },
     },
     discord: {
       enabled: true,
@@ -106,7 +109,7 @@
       allowFrom: ["${YOUR_DISCORD_ID}"],
       token: "${DISCORD_BOT_TOKEN}",
       groupPolicy: "allowlist",
-      streaming: "off",
+      streaming: { mode: "off" },
     },
   },
 }
